@@ -1,0 +1,6884 @@
+
+//--------------------Single Hashing----------------------
+#define ll long long
+class HashedString {
+  public:
+   // change M and B if you want
+   static const ll M = (1LL << 61) - 1;
+   static const ll B;
+   // pow[i] contains B^i % M
+   static vector<ll> pow;
+
+   // p_hash[i] is the hash of the first i characters of the given string
+   vector<ll> p_hash, r_hash;
+
+   __int128 mul(ll a, ll b) { return (__int128)a * b; }
+   ll mod_mul(ll a, ll b) { return mul(a, b) % M; }
+
+  public:
+   HashedString(const string &s) : r_hash(s.size() + 1), p_hash(s.size() + 1) {
+      while (pow.size() < s.size()) { pow.push_back(mod_mul(pow.back(), B)); }
+      p_hash[0] = 0;
+      r_hash[0] = 0;
+      for (int i = 0; i < (int)s.size(); i++) {
+         p_hash[i + 1] = (mul(p_hash[i], B) + s[i]) % M; // forward hash
+      }
+      ll sz = s.size();
+      for (int i = sz - 1, j = 0; i >= 0; i --, j ++) {
+         r_hash[j + 1] = (mul(r_hash[j], B) + s[i]) % M; // hash of reversed string
+      }
+   }
+
+   ll getHash(int start, int end) { // 0 based
+      ll raw_val = p_hash[end + 1] - mod_mul(p_hash[start], pow[end - start + 1]);
+      return (raw_val + M) % M;
+   }
+
+   // fixed: returns hash of reversed substring s[start..end]
+   ll getReverseHash(int start, int end, int n) { // 0 based
+      int rl = n - 1 - end;
+      int rr = n - 1 - start;
+      ll raw_val = r_hash[rr + 1] - mod_mul(r_hash[rl], pow[rr - rl + 1]);
+      return (raw_val + M) % M;
+   }
+};
+mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
+vector<ll> HashedString::pow = {1};
+const ll HashedString::B = uniform_int_distribution<ll>(0, M - 1)(rng);
+
+class Solution {
+public:
+    int distinctPoints(string s, int k) {
+        int n = s.size();
+        if (k == n) return 1;
+        
+        HashedString s1(s);
+
+        int l = 0, r = k - 1;
+        unordered_map<long long, bool> um;
+        int cnt = 0;
+        while (r < n) {
+            if (l == 0) {
+                long long h  = s1.getHash(r + 1, n - 1);
+                long long hr = s1.getReverseHash(r + 1, n - 1, n);
+                long long rep = min(h, hr);
+                if (um[rep] == 0) cnt++;
+                um[rep] = 1;
+            } 
+            else if (r == n - 1) {
+                long long h  = s1.getHash(0, l - 1);
+                long long hr = s1.getReverseHash(0, l - 1, n);
+                long long rep = min(h, hr);
+                if (um[rep] == 0) cnt++;
+                um[rep] = 1;
+            } 
+            else {
+                long long h   = s1.getHash(0, l - 1);
+                long long hr  = s1.getReverseHash(0, l - 1, n);
+                long long h2  = s1.getHash(r + 1, n - 1);
+                long long hr2 = s1.getReverseHash(r + 1, n - 1, n);
+
+                int len1 = l;
+                int len2 = n - (r + 1);
+
+                long long concat1 = (((__int128)h * HashedString::pow[len2]) % HashedString::M + h2) % HashedString::M;
+                long long concat2 = (((__int128)hr2 * HashedString::pow[len1]) % HashedString::M + hr) % HashedString::M;
+
+                long long rep = min(concat1, concat2);
+                if (um[rep] == 0) cnt++;
+                um[rep] = 1;
+            }
+            l++, r++;
+        }
+        
+        return cnt;
+    }
+};
+©leetcode
+
+
+//-------------------------single hashing--------------------------------------
+
+class HashedString {
+  private:
+   // change M and B if you want
+   static const ll M = (1LL << 61) - 1;
+   static const ll B;
+   // pow[i] contains B^i % M
+   static vector<ll> pow;
+
+   // p_hash[i] is the hash of the first i characters of the given string
+   vector<ll> p_hash, r_hash;
+
+   __int128 mul(ll a, ll b) { return (__int128)a * b; }
+   ll mod_mul(ll a, ll b) { return mul(a, b) % M; }
+
+  public:
+   HashedString(const string &s) : r_hash(s.size() + 1), p_hash(s.size() + 1) {
+      while (pow.size() < s.size()) { pow.push_back(mod_mul(pow.back(), B)); }
+      p_hash[0] = 0;
+      r_hash[0] = 0;
+      for (int i = 0; i < s.size(); i++) {
+         p_hash[i + 1] = (mul(p_hash[i], B) + s[i]) % M; // 1-based
+      }
+      ll sz = s.size();
+      for (int i = sz - 1, j = 0; i >= 0; i --, j ++) {
+         r_hash[j + 1] = (mul(r_hash[j], B) + s[i]) % M;
+      }
+   }
+
+   ll getHash(int start, int end) { // 0 based
+      ll raw_val = p_hash[end + 1] - mod_mul(p_hash[start], pow[end - start + 1]);
+      return (raw_val + M) % M;
+   }
+   ll getrHash(int start, int end) { // 0 based
+      ll raw_val = r_hash[end + 1] - mod_mul(r_hash[start], pow[end - start + 1]);
+      return (raw_val + M) % M;
+   }
+};
+mt19937 rng((uint32_t)chrono::steady_clock::now().time_since_epoch().count());
+vector<ll> HashedString::pow = {1};
+const ll HashedString::B = uniform_int_distribution<ll>(0, M - 1)(rng);
+
+
+
+//-------------------------------double hashing-------------------------------
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+
+
+const int N = 2e5 + 9;
+const int mod1 = 1e9+21, mod2 = 1e9+9;
+const int p1 = 37, p2 = 31;
+
+pair<int,int> pw[N], invpw[N];
+int bigMod(int a,int b,int mod) {
+    int ans = 1;
+    while(b) {
+        if(b & 1) {
+            ans = 1LL * ans * a % mod;
+        }
+        a = 1LL * a * a % mod;
+        b >>= 1;
+    }
+    return (ans % mod);
+}
+void preCalc() {
+    pw[0] = {1, 1};
+    for(int i = 1; i < N; i++) {
+        pw[i].first = 1LL * pw[i-1].first * p1 % mod1;
+    }
+    for(int i = 1; i < N; i++) {
+        pw[i].second = 1LL * pw[i-1].second * p2 % mod2;
+    }
+    int invpw1 = bigMod(p1, mod1 - 2, mod1);
+    int invpw2 = bigMod(p2, mod2 - 2, mod2);
+    invpw[0] = {1, 1};
+    for(int i = 1; i < N; i++) {
+        invpw[i].first = 1LL * invpw[i-1].first * invpw1 % mod1;
+        invpw[i].second = 1LL * invpw[i-1].second * invpw2 % mod2;
+    }
+}
+
+class  Hash_node {
+public:
+    int n;
+    string s;
+    vector<pair<int,int>> hs, prehs;
+    Hash_node(){}
+    Hash_node(string _s) {
+        s = _s;
+        n = _s.size();
+        hs.resize(n);
+        for(int i = 0; i < n; i++) {
+            hs[i].first += 1LL * s[i] * pw[i].first % mod1;
+            hs[i].first %= mod1;
+        }
+        for(int i = 0; i < n; i++) {
+            hs[i].second += 1LL * s[i] * pw[i].second % mod2;
+            hs[i].second %= mod2;
+        }
+        prehs.resize(n);
+        prehs[0].first = hs[0].first;
+        for(int i = 1; i < n; i++) {
+            prehs[i].first = prehs[i-1].first + hs[i].first;
+            prehs[i].first %= mod1;
+        }
+        prehs[0].second = hs[0].second;
+        for(int i = 1; i < n; i++) {
+            prehs[i].second = prehs[i-1].second + hs[i].second;
+            prehs[i].second %= mod2;
+        }
+    }
+    pair<int,int> getHash(int i,int j) {
+        assert(i <= j);
+        pair<int,int> ans({0, 0});
+        if(i == 0) {
+            ans.first = prehs[j].first;
+            ans.second = prehs[j].second;
+        }
+        else {
+            ans.first = (prehs[j].first - prehs[i-1].first + mod1) % mod1;
+            ans.first = 1LL * ans.first * invpw[i].first % mod1;
+            ans.second = (prehs[j].second - prehs[i-1].second + mod2) % mod2;
+            ans.second = 1LL * ans.second * invpw[i].second % mod2;
+        }
+        return ans;
+    }
+};
+
+
+void do_the_honour(){
+
+
+        int n,x,y; cin >> n >> x >> y;
+
+        string s;cin >> s;
+
+        Hash_node node(s);
+
+        int dp[n+1];
+        memset(dp,-1,sizeof dp);
+
+
+
+        for(int j=x;j<=y;j++){
+
+                    int l=1,r=n;
+                    int ans=0;
+                    while(l<=r){
+                        int mid=(l+r)/2;
+
+                        auto hs=node.getHash(0,mid-1);
+
+                        int c=1;
+                        if(dp[mid]!=-1){
+                        c=dp[mid];
+                        goto label;
+                        }
+
+
+                        for(int i=mid;i+mid-1<n;i++){
+                        //if(s[i]!=s[0]) continue;
+                        if(hs==node.getHash(i,i+mid-1)){
+                            c++;
+                            i+=mid;
+                            i--;
+                        }
+                    }
+                    dp[mid]=c;
+                    label:
+                        if(c>=j){
+                            ans=mid;
+                            l=mid+1;
+                        }
+                        else r=mid-1;
+                }
+
+                cout << ans << " ";
+
+            }
+                cout << endl;
+
+}
+
+signed main(){
+    optimize();
+    int t=1;
+    cin>>t;
+    preCalc();
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+
+
+
+//-------------------------------end of hashing------------------------------
+
+
+
+///----------------------------Suffix Array------------------------------------
+
+
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+
+
+vector<int> sort_cyclic_shifts(string const& s) {
+    int n = s.size();
+    const int alphabet = 256;
+    vector<int> p(n), c(n), cnt(max(alphabet, n), 0);
+
+    for (int i = 0; i < n; i++)
+        cnt[s[i]]++;
+
+    for (int i = 1; i < alphabet; i++)
+        cnt[i] += cnt[i - 1];
+
+    for (int i = 0; i < n; i++)
+        p[--cnt[s[i]]] = i;
+
+    c[p[0]] = 0;
+    int classes = 1;
+
+    for (int i = 1; i < n; i++) {
+        if (s[p[i]] != s[p[i - 1]])
+            classes++;
+
+        c[p[i]] = classes - 1;
+    }
+
+    vector<int> pn(n), cn(n);
+
+    for (int h = 0; (1 << h) < n; ++h) {
+        for (int i = 0; i < n; i++) {
+            pn[i] = p[i] - (1 << h);
+            if (pn[i] < 0)
+                pn[i] += n;
+        }
+
+        fill(cnt.begin(), cnt.begin() + classes, 0);
+
+        for (int i = 0; i < n; i++)
+            cnt[c[pn[i]]]++;
+
+        for (int i = 1; i < classes; i++)
+            cnt[i] += cnt[i - 1];
+
+        for (int i = n - 1; i >= 0; i--)
+            p[--cnt[c[pn[i]]]] = pn[i];
+
+        cn[p[0]] = 0;
+        classes = 1;
+
+        for (int i = 1; i < n; i++) {
+            pair<int, int> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};
+            pair<int, int> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};
+            if (cur != prev)
+                ++classes;
+
+            cn[p[i]] = classes - 1;
+        }
+
+        c.swap(cn);
+        if (classes == n)
+            break;
+    }
+
+    return p;
+}
+
+vector<int> suffix_array_construction(string s) {
+    s += "$";
+    vector<int> sorted_shifts = sort_cyclic_shifts(s);
+    sorted_shifts.erase(sorted_shifts.begin());
+    return sorted_shifts;
+}
+
+vector<int> lcp_construction(string const& s, vector<int> const& p) {
+    int n = s.size();
+    vector<int> rank(n, 0);
+
+    for (int i = 0; i < n; i++)
+        rank[p[i]] = i;
+
+    int k = 0;
+    vector<int> lcp(n - 1, 0);
+
+    for (int i = 0; i < n; i++) {
+        if (rank[i] == n - 1) {
+            k = 0;
+            continue;
+        }
+
+        int j = p[rank[i] + 1];
+        while (i + k < n && j + k < n && s[i + k] == s[j + k])
+            k++;
+
+        lcp[rank[i]] = k;
+
+        if (k)
+            k--;
+    }
+
+    return lcp;
+}
+
+//int main() {
+//    string s;
+//    cin >> s;
+//    vector<int> v = suffix_array_construction(s);
+//
+//    for (int i = 0; i < v.size(); i++)
+//        cout << v[i] << " ";
+//
+//    cout << endl;
+//
+//    vector<int> lcp = lcp_construction(s, v);
+//
+//    for (int i = 0; i < lcp.size(); i++)
+//        cout << lcp[i] << " ";
+//
+//    return 0;
+//}
+
+
+
+
+int check(int n,int mid, string& pattern,vector<int>&v,vector<int>&lcp,string &s)
+{
+    int flag = -1, patternSize = pattern.size(),
+        suffixStart = v[mid];
+
+    // Check if the suffix can contain the entire pattern
+    if (n - suffixStart >= patternSize)
+        flag = 0;
+
+    // Compare characters of the pattern and suffix
+    for (int i = 0; i < min(n - suffixStart, patternSize);
+         i++) {
+        if (s[suffixStart + i] < pattern[i])
+            return -1;
+        if (s[suffixStart + i] > pattern[i])
+            return 1;
+    }
+    return flag;
+}
+
+
+
+
+int countocc(string &pat,int n,vector<int>&v,vector<int>&lcp,string &s){
+
+
+    int left=0,right=n-1;
+    int answer=-1;
+    int l=left,r=right;
+
+    while(l<=r){
+
+        int mid=(l+r)/2;
+        int num=check(n,mid,pat,v,lcp,s);
+
+        if(num==0){
+            answer=mid;
+            r=mid-1;
+        }
+        else if(num==1){
+            r=mid-1;
+        }
+        else{
+            l=mid+1;
+        }
+
+    }
+
+    if(answer==-1){
+        return 0;
+    }
+    left=answer;
+    l=left,r=right;
+     answer=left;
+
+
+        while(l<=r){
+
+        int mid=(l+r)/2;
+        int num=check(n,mid,pat,v,lcp,s);
+
+        if(num==0){
+            answer=mid;
+            l=mid+1;
+        }
+        else if(num==-1){
+            l=mid+1;
+        }
+        else{
+            r=mid-1;
+        }
+
+    }
+
+    right=answer;
+    return right-left+1;
+
+
+}
+
+
+void do_the_honour(){
+
+    string s,t;cin >> s ;
+    string demo=s;
+
+    vector<int> v = suffix_array_construction(demo);
+    vector<int> lcp = lcp_construction(demo,v);
+
+    int m;cin >> m;
+    while(m--){
+
+
+    string pat;cin >> pat;
+
+    if( countocc(pat,(int)s.size(),v,lcp,s)==0)no;
+    else yes;
+    }
+
+}
+
+signed main(){
+    optimize();
+    int t=1;
+   // cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+
+
+//-------------------------End of suffix array----------------------
+
+//----------------segmenttree with lazy ------------------------
+
+//set x,increase by x and get sum
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+ 
+ 
+ 
+struct node{
+    int lazy_add;
+    int lazy_set;
+    int sum;
+    node(){
+        lazy_add=0;
+        lazy_set=0;
+        sum=0;
+    }
+};
+ 
+node merge(node a,node b){
+ 
+    node ans;
+    ans.sum=a.sum+b.sum;
+    return ans;
+ 
+}
+ 
+node t[800033];
+int arr[200004];
+ 
+void push_down(int cur, int child){
+ 
+    if(t[cur].lazy_set!=0){
+        t[child].lazy_set=t[cur].lazy_set;
+        t[child].lazy_add=0;
+    }
+    else{
+        if(t[child].lazy_set!=0){
+            t[child].lazy_set+=t[cur].lazy_add;
+ 
+        }
+        else{
+            t[child].lazy_add+=t[cur].lazy_add;
+        }
+    }
+ 
+}
+ 
+void push(int id,int l,int r){
+ 
+        if(t[id].lazy_add==0 and t[id].lazy_set==0) return;
+ 
+        if(l!=r){
+            push_down(id,id<<1);
+            push_down(id,id<<1|1);
+        }
+ 
+        if(t[id].lazy_add!=0){
+            t[id].sum += (r-l+1)*t[id].lazy_add;t[id].lazy_add=0;
+        }
+        else if(t[id].lazy_set!=0){
+            t[id].sum = (r-l+1)*t[id].lazy_set;    t[id].lazy_set=0;
+        }
+ 
+ 
+ 
+}
+ 
+ 
+void update(int id,int l,int r,int lq,int rq,int val,int utype){
+    push(id,l,r);
+    if(lq>r or rq<l) return;
+    if(lq<=l and r<=rq){
+        if(utype==0){
+            t[id].lazy_set=val;
+        }
+        else{
+            t[id].lazy_add+=val;
+        }
+        push(id,l,r);
+        return;
+    }
+ 
+    int mid=(l+r)/2;
+    update(2*id,l,mid,lq,rq,val,utype);
+    update(2*id+1,mid+1,r,lq,rq,val,utype);
+    t[id]=merge(t[id<<1],t[(id<<1)|1]);
+ 
+}
+ 
+ 
+int query(int id,int l,int r, int lq,int rq){
+ 
+ 
+   push(id,l,r);
+    if(lq>r or l>rq) return 0;
+    if(lq<=l and r<=rq) return t[id].sum;
+ 
+    int mid = (l + r) / 2;
+    return (query(2*id,l,mid,lq,rq)+query(2*id+1,mid+1,r,lq,rq));
+ 
+}
+ 
+ 
+void build(int id,int l,int r){
+ 
+    if(l==r){
+        t[id].sum=arr[l];
+        t[id].lazy_add=0;
+        t[id].lazy_set=0;
+        return;
+    }
+    int mid=(l+r)/2;
+    build(2*id,l,mid);
+    build(2*id+1,mid+1,r);
+    t[id]=merge(t[2*id],t[2*id+1]);
+ 
+}
+ 
+ 
+void do_the_honour(){
+ 
+    int n;cin >> n;
+    int q;cin >> q;
+ 
+    for(int i=1;i<=n;i++) cin >> arr[i];
+ 
+    build(1,1,n);
+   // cout << query(1,1,n,3,5) << endl;
+ 
+    while(q--){
+        int c,a,b,x; cin >> c;
+        if(c==1){
+            cin >> a >> b >> x;
+            update(1,1,n,a,b,x,1);
+        }
+        else if(c==2){
+            cin >> a >> b >> x;
+            update(1,1,n,a,b,x,0);
+        }
+        else{
+                cin >> a >> b;
+            int ans=query(1,1,n,a,b);
+            cout << ans << endl;
+        }
+    }
+}
+ 
+signed main(){
+    optimize();
+    int tt=1;
+   // cin>>tt;
+    for(int z=1;z<=tt;z++){
+ 
+ 
+    do_the_honour();
+ 
+ 
+}
+    return 0;
+}
+///-----------------------------another code--------------------
+//a,d is given update by  a+(n-1)*d for each node  l to r 
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+ 
+#define MP make_pair
+using ap = pair<int,int>;
+ 
+struct node{
+    ap lazy;
+    int sum;
+    node(){
+        lazy ={0,0};
+        sum=0;
+    }
+};
+ 
+node merge(node a,node b){
+ 
+    node ans;
+    ans.sum=a.sum+b.sum;
+    return ans;
+ 
+}
+ 
+node t[800033];
+int arr[200004];
+ 
+void push_down(ap cur, int child){
+ 
+    t[child].lazy.first += cur.first;
+    t[child].lazy.second += cur.second;
+ 
+ 
+}
+ 
+inline int getnth(ap cur,int n){
+ 
+    return (cur.first+(n-1)*cur.second);
+}
+ 
+inline int getsum(ap cur,int n){
+ 
+    return (n*(2*cur.first+(n-1)*cur.second))/2;
+}
+ 
+void push(int id,int l,int r){
+ 
+        if(t[id].lazy==ap{0,0}) return;
+ 
+        if(l!=r){
+            push_down(t[id].lazy,id<<1);
+            int mid=(l+r)/2;
+            int n=mid+1-(l-1);
+            int newa = getnth(t[id].lazy,n);
+            push_down({newa,t[id].lazy.second},id<<1|1);
+        }
+ 
+ 
+        t[id].sum += getsum(t[id].lazy,r-l+1);
+        t[id].lazy={0,0};
+ 
+ 
+}
+ 
+ 
+void update(int id,int l,int r,int lq,int rq,int a,int d){
+    push(id,l,r);
+    if(lq>r or rq<l) return;
+    if(lq<=l and r<=rq){
+        t[id].lazy={(l-lq+1),d};
+        push(id,l,r);
+        return;
+    }
+ 
+    int mid=(l+r)/2;
+    update(2*id,l,mid,lq,rq,a,d);
+    update(2*id+1,mid+1,r,lq,rq,a,d);
+    t[id]=merge(t[id<<1],t[id<<1|1]);
+ 
+}
+ 
+ 
+int query(int id,int l,int r, int lq,int rq){
+ 
+ 
+    push(id,l,r);
+    if(lq>r or l>rq) return 0;
+    if(lq<=l and r<=rq) return t[id].sum;
+ 
+    int mid = (l + r) / 2;
+    return (query(2*id,l,mid,lq,rq)+query(2*id+1,mid+1,r,lq,rq));
+ 
+}
+ 
+ 
+void build(int id,int l,int r){
+ 
+    if(l==r){
+        t[id].sum=arr[l];
+        t[id].lazy={0,0};
+        return;
+    }
+    int mid=(l+r)/2;
+    build(2*id,l,mid);
+    build(2*id+1,mid+1,r);
+    t[id]=merge(t[2*id],t[2*id+1]);
+ 
+}
+ 
+ 
+void do_the_honour(){
+ 
+    int n;cin >> n;
+   int q;cin >> q;
+ 
+    for(int i=1;i<=n;i++) cin >> arr[i];
+ 
+    build(1,1,n);
+   // cout << query(1,1,n,3,5) << endl;
+ 
+    while(q--){
+        int c,a,b,x; cin >> c;
+        if(c==1){
+            cin >> a >> b;
+            update(1,1,n,a,b,1,1);
+        }
+        else{
+                cin >> a >> b;
+            int ans=query(1,1,n,a,b);
+            cout << ans << endl;
+        }
+    }
+}
+ 
+signed main(){
+    optimize();
+    int tt=1;
+   // cin>>tt;
+    for(int z=1;z<=tt;z++){
+ 
+ 
+    do_the_honour();
+ 
+ 
+}
+    return 0;
+}
+///----------------End of segment tree--------------------------
+
+///-------------------- Persistent Segment Tree----------------
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+
+const int MXN = 4e5+5,INF=1e9+5,MXK=22;
+
+
+int N,Q;
+int A[MXN];
+pair<int,int>child[MXN*MXK];
+int tree[MXN*MXK],root[MXN];
+int ptr,list_size;
+
+void modify(int cur, int prev, int l, int r, int pos, int val) {
+    if (l == r) {
+        tree[cur] = val;
+        return;
+    }
+
+    int mid = (l + r) / 2;
+    if (pos <= mid) {
+        child[cur].first = ++ptr;
+        child[cur].second = child[prev].second;
+
+        modify(child[cur].first, child[prev].first, l, mid, pos, val);
+    } else {
+        child[cur].first = child[prev].first;
+        child[cur].second = ++ptr;
+
+        modify(child[cur].second, child[prev].second, mid + 1, r, pos, val);
+    }
+
+    tree[cur] = tree[child[cur].first] + tree[child[cur].second];
+}
+
+
+
+void modify(int new_version,int prev_version,int pos,int val){
+
+
+    modify(new_version,prev_version,0,N-1,pos,val);
+}
+
+int query(int node, int l, int r,int ql,int qr){
+
+    if(node==0) return 0;
+    if(l>qr or r<ql) return 0;
+    if(l>=ql and r<=qr) return tree[node];
+    int mid=(l+r)/2;
+    return query(child[node].first ,l ,mid, ql,qr)+query(child[node].second,mid+1,r,ql,qr);
+
+
+}
+
+int query(int version,int l,int r){
+    return query(version,0,N-1,l,r);
+}
+
+void do_the_honour(){
+
+
+    cin >> N >> Q;
+
+    for (int i = 0; i < N; i++) {
+        cin >> A[i];
+
+        int prev_root = root[1];
+        root[1] = ++ptr;
+        modify(root[1], prev_root, i, A[i]);
+    }
+
+    list_size = 1;
+
+    while (Q--) {
+        int type;
+        cin >> type;
+
+        if (type == 1) {
+            int a, k, x;
+            cin >> k >> a >> x;
+            a--;
+
+            int new_root = ++ptr;
+            modify(new_root, root[k], a, x);
+
+            root[k] = new_root;
+        } else if (type == 2) {
+            int k, l, r;
+            cin >> k >> l >> r;
+            l--, r--;
+
+            cout << query(root[k], l, r) << "\n";
+        } else {
+            int k;
+            cin >> k;
+
+            root[++list_size] = root[k];
+        }
+    }
+}
+
+signed main(){
+    optimize();
+    int t=1;
+    //cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+///---------------------- End of Persistent segment tree -------------
+
+////------------------------- 2-SAT -----------------starts-----------
+
+
+// C++ implementation to find if the given
+// expression is satisfiable using the
+// Kosaraju's Algorithm
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX = 300000;
+
+// data structures used to implement Kosaraju's
+// Algorithm. Please refer
+// https://www.geeksforgeeks.org/strongly-connected-components/
+vector<int> adj[MAX];
+vector<int> adjInv[MAX];
+bool visited[MAX];
+bool visitedInv[MAX];
+stack<int> s;
+
+// this array will store the SCC that the
+// particular node belongs to
+int scc[MAX];
+
+// counter maintains the number of the SCC
+int counter = 1;
+
+// adds edges to form the original graph
+void addEdges(int a, int b)
+{
+    adj[a].push_back(b);
+}
+
+// add edges to form the inverse graph
+void addEdgesInverse(int a, int b)
+{
+    adjInv[b].push_back(a);
+}
+
+// for STEP 1 of Kosaraju's Algorithm
+void dfsFirst(int u)
+{
+    if(visited[u])
+        return;
+
+    visited[u] = 1;
+
+    for (int i=0;i<adj[u].size();i++)
+        dfsFirst(adj[u][i]);
+
+    s.push(u);
+}
+
+// for STEP 2 of Kosaraju's Algorithm
+void dfsSecond(int u)
+{
+    if(visitedInv[u])
+        return;
+
+    visitedInv[u] = 1;
+
+    for (int i=0;i<adjInv[u].size();i++)
+        dfsSecond(adjInv[u][i]);
+
+    scc[u] = counter;
+}
+
+// function to check 2-Satisfiability
+bool is2Satisfiable(int n, int m, int a[], int b[])
+{
+    // adding edges to the graph
+    for(int i=0;i<m;i++)
+    {
+        // variable x is mapped to x
+        // variable -x is mapped to n+x = n-(-x)
+
+        // for a[i] or b[i], addEdges -a[i] -> b[i]
+        // AND -b[i] -> a[i]
+        if (a[i]>0 && b[i]>0)
+        {
+            addEdges(a[i]+n, b[i]);
+            addEdgesInverse(a[i]+n, b[i]);
+            addEdges(b[i]+n, a[i]);
+            addEdgesInverse(b[i]+n, a[i]);
+        }
+
+        else if (a[i]>0 && b[i]<0)
+        {
+            addEdges(a[i]+n, n-b[i]);
+            addEdgesInverse(a[i]+n, n-b[i]);
+            addEdges(-b[i], a[i]);
+            addEdgesInverse(-b[i], a[i]);
+        }
+
+        else if (a[i]<0 && b[i]>0)
+        {
+            addEdges(-a[i], b[i]);
+            addEdgesInverse(-a[i], b[i]);
+            addEdges(b[i]+n, n-a[i]);
+            addEdgesInverse(b[i]+n, n-a[i]);
+        }
+
+        else
+        {
+            addEdges(-a[i], n-b[i]);
+            addEdgesInverse(-a[i], n-b[i]);
+            addEdges(-b[i], n-a[i]);
+            addEdgesInverse(-b[i], n-a[i]);
+        }
+    }
+
+    // STEP 1 of Kosaraju's Algorithm which
+    // traverses the original graph
+    for (int i=1;i<=2*n;i++)
+        if (!visited[i])
+            dfsFirst(i);
+
+    // STEP 2 of Kosaraju's Algorithm which
+    // traverses the inverse graph. After this,
+    // array scc[] stores the corresponding value
+    while (!s.empty())
+    {
+        int n = s.top();
+        s.pop();
+
+        if (!visitedInv[n])
+        {
+            dfsSecond(n);
+            counter++;
+        }
+    }
+
+    for (int i=1;i<=n;i++)
+    {
+        // for any 2 variable x and -x lie in
+        // same SCC
+        if(scc[i]==scc[i+n])
+        {
+
+            return false;
+        }
+    }
+
+    // no such variables x and -x exist which lie
+    // in same SCC
+    return true;
+}
+
+//  Driver function to test above functions
+int main()
+{
+    // n is the number of variables
+    // 2n is the total number of nodes
+    // m is the number of clauses
+    int n = 5, m = 7;
+    cin >> m >> n;
+    // each clause is of the form a or b
+    // for m clauses, we have a[m], b[m]
+    // representing a[i] or b[i]
+
+    // Note:
+    // 1 <= x <= N for an uncomplemented variable x
+    // -N <= x <= -1 for a complemented variable x
+    // -x is the complement of a variable x
+
+    // The CNF being handled is:
+    // '+' implies 'OR' and '*' implies 'AND'
+    // (x1+x2)*(x2’+x3)*(x1’+x2’)*(x3+x4)*(x3’+x5)*
+    // (x4’+x5’)*(x3’+x4)
+    int a[m],b[m];
+
+    for(int i=0;i<m;i++){
+        char c,d;
+        int x,y;
+        cin >> c >> x>> d >> y;
+        if(c=='-') x*=-1;
+        if(d=='-') y*=-1;
+        a[i]=x;
+        b[i]=y;
+
+    }
+
+    // We have considered the same example for which
+    // Implication Graph was made
+    if(!is2Satisfiable(n, m, a, b)) cout << "IMPOSSIBLE" << endl;
+    else {
+        for(int i=1;i<=n;i++){
+            if(scc[i]<scc[i+n]) cout <<"-";
+            else cout << "+"  ;
+        }
+    }
+
+    return 0;
+}
+/////////---------------------2-SAT------------ends---------------------;
+
+
+
+///////------------------------Dijkstra-------------------
+#include<bits/stdc++.h>
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define int long long
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+const int N=2e5+3;
+const int INF=1e15+10;
+vector<pair<int,int>>g[N];
+vector<int>dist(N,INF);
+
+void dijkstra(int src){
+
+
+    vector<bool>vis(N,0);
+
+    priority_queue<pair<int,int>,vector<pair<int,int>>,greater<pair<int,int>>>st;
+
+    st.push({0,src});
+    dist[src]=0;
+    while(st.size()>0){
+        auto node=st.top();
+        st.pop();
+        int v=node.second;
+        int v_dis=node.first;
+
+        if(vis[v]) continue;
+        vis[v]=1;
+        for(auto child:g[v]){
+            int child_v=child.first;
+            int wt=child.second;
+            if(dist[v]+wt<dist[child_v]){
+                dist[child_v]=dist[v]+wt;
+                st.push({dist[child_v],child_v});
+            }
+        }
+    }
+
+}
+
+void do_the_honour(){
+
+    int n,m;cin >> n >> m;
+    for(int i=0;i<m;i++){
+        int u,v,w;
+        cin >> u >> v >> w;
+        g[u].push_back({v,w});
+        //g[v].push_back({u,w});
+    }
+
+    dijkstra(1);
+    for(int i=1;i<=n;i++){
+        cout << dist[i] << " ";
+    }
+
+}
+
+signed main(){
+    optimize();
+    int t=1;
+    //cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+
+///////////-----------------dijkstra-----------ends------------------
+
+
+////////----------------bell men ford to find negative cycle-------
+
+#include <bits/stdc++.h>
+#define endl "\n"
+using namespace std;
+#define int long long int
+
+class triplet{
+public:
+	int first;
+	int second;
+	int third;
+
+};
+
+
+int n, m;
+vector<triplet> edges;
+vector<int> dist;
+vector<int> relaxant;
+
+void bellman_ford()
+{
+	int x;
+	for(int i = 1; i <= n; ++i)
+	{
+		x = -1;
+		for(auto e: edges)
+		{
+
+			int u = e.first;
+			int v = e.second;
+			int d = e.third;
+			if(dist[u]+d < dist[v])
+			{
+				dist[v] = d+dist[u];
+				relaxant[v] = u;
+				x = v;
+			}
+		}
+	} // n relaxations
+
+	if(x == -1)
+		cout << "NO" << endl;
+
+	else
+	{
+		for(int i = 1; i <= n; ++i)
+		{
+			x = relaxant[x];
+		}
+
+		vector<int> cycle;
+
+		for(int v = x; ; v = relaxant[v])
+		{
+			cycle.push_back(v);
+			if(v == x and cycle.size() > 1)
+				break;
+		}
+
+		reverse(cycle.begin(), cycle.end());
+
+		cout << "YES" << endl;
+		for(auto v: cycle)
+		{
+			cout << v << " ";
+		}
+
+		cout << endl;
+	}
+
+
+}
+
+
+int32_t main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cin >> n >> m;
+	dist.resize(n+1);
+	relaxant.resize(n+1);
+	edges.resize(m);
+
+	for(int i = 0; i < m; ++i)
+	{
+		struct triplet inp;
+		cin >> inp.first >> inp.second >> inp.third;
+		edges[i] = inp;
+	}
+
+	for(int i = 1; i <= n; ++i)
+	{
+		relaxant[i] = -1;
+	}
+	bellman_ford();
+}
+
+
+////////////-----------------bell man ford ends -----------------
+//////////------------------dynamic MST------------------
+
+#include "bits/stdc++.h"
+using namespace std;
+#define all(x) begin(x),end(x)
+typedef long long ll;
+typedef vector<int> vi;
+
+const int oo = 1e9;
+
+struct DSU{
+    vector<int> sz,parent;
+    int components;
+    void reset(int n) {
+        fill(sz.begin(),sz.begin()+n,1);
+        iota(parent.begin(),parent.begin()+n,0);
+        components=n;
+    }
+    DSU(int n) : sz(n),parent(n) {
+        reset(n);
+    }
+    void link(int a, int b) {
+        components--;
+        if(sz[a]<sz[b]) swap(a,b);
+        sz[a]+=sz[b];
+        parent[b] = a;
+    }
+    bool unite(int a, int b) {
+        int pa = find(a), pb = find(b);
+        if(pa!=pb) {
+            link(pa,pb);
+            return true;
+        }
+        return false;
+    }
+    int find(int a) {
+        if(a==parent[a]) return a;
+        return parent[a] = find(parent[a]);
+    }
+};
+
+struct dynamicMST {
+    struct edge {
+        int l,r;
+        int u,v,w;
+        bool operator<(const edge& o) {
+            return w<o.w;
+        }
+    };
+    vector<edge> ives; // edges + time interval that they are active.
+    vector<array<int,3>> startes; 
+    vi touch; // last time this edge was touched
+    int totaln;
+    DSU dsu,dsu2;
+    vi id;
+    dynamicMST(vector<array<int,3>> ES, int n) : startes(ES), touch(ES.size()), totaln(n), dsu(n),dsu2(n), id(n)  {
+        // give all edges upfront.
+    }
+    int q=0;
+    void update(int i, int x) {
+        // update edge weight of edge i to x
+        // if you want to delete the edge, just set it to infinity
+        q++;
+        auto& [u,v,w] = startes[i];
+        ives.push_back({touch[i],q,u,v,w});
+        touch[i]=q;
+        w = x;
+    }
+    vector<ll> ans;
+    void solve(int l, int r, vector<edge> es, int n, ll cost=0) {
+        // remove edges that don't belong to this interval
+        es.erase(stable_partition(all(es),[&](const edge& e) {return !(e.r<=l or r<=e.l);}),es.end());
+        dsu.reset(n),dsu2.reset(n);
+
+        // compressing connected components
+        for(auto& e : es) if(l<e.l or e.r<r) { // active edges
+            dsu.unite(e.u,e.v);
+        }
+        
+        for(auto& e : es) if(e.l<=l and r<=e.r) { // fully overlapping edges
+            if(dsu.unite(e.u,e.v)) {
+                cost+=e.w;
+                dsu2.unite(e.u,e.v);
+            }
+        }
+
+        if(l+1==r) { // base case, we found the MST.
+            ans[l]=cost;
+            return;
+        }
+
+        int cnt=0; // relabel all connected components to 0...cnt-1
+        for(int i=0;i<n;++i) if(dsu2.find(i)==i) id[i]=cnt++;
+        dsu.reset(cnt);
+        for(auto& e : es) { // relabeling and marking useless edges
+            e.u = id[dsu2.find(e.u)], e.v = id[dsu2.find(e.v)];
+            if(e.l<=l and r<=e.r) {
+                if(!dsu.unite(e.u,e.v)) e.l=oo,e.r=-oo; // mark useless edge, will get deleted in next step
+            }
+        }
+        int m = (l+r)/2;
+        solve(l,m,es,cnt,cost);
+        solve(m,r,es,cnt,cost);
+    }
+    vector<ll> run() {
+        int m = startes.size();
+        q++;
+        for(int i=0;i<m;++i) {
+            auto& [u,v,w] = startes[i];
+            ives.push_back({touch[i],q,u,v,w});
+        }
+        
+        sort(all(ives)); // (q+m) log(q+m) time
+        ans.resize(q);
+        solve(0,q,ives,totaln); // (q+m) log(q) alpha(n) time
+        return ans;
+    }
+};
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    int n,m,q; cin >> n >> m >> q;
+    vector<array<int,3>> es(m);
+
+    for(auto& [u,v,w] : es) {
+        cin >> u >> v >> w;
+        --u,--v;
+    }
+
+    dynamicMST mst(es,n);
+
+    for(int i=0;i<q;++i) {
+        int k,d;
+        cin >> k >> d, --k;
+        mst.update(k,d);
+    }
+    auto ans = mst.run();
+    for(int i=1;i<=q;++i) { // ans[0] gives the MST cost of the initial MST.
+        cout << ans[i] << '\n';
+    }
+    
+}
+///////////---------------dynamic mst ends------------------------
+
+///////////////----------------------Hashing again------------------
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+const int N = 2e5 + 2;
+
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+int my_rand(int l, int r)
+{
+    return uniform_int_distribution<int>(l, r) (rng);
+}
+int BigMod(long long p, long long q, const int mod)
+{
+    int ans = 1 % mod;
+    p %= mod;
+    if (p < 0)
+        p += mod;
+    while (q)
+    {
+        if (q & 1)
+            ans = (long long) ans * p % mod;
+        p = (long long) p * p % mod;
+        q >>= 1;
+    }
+    return ans;
+}
+
+const int MOD1 = 127657753, MOD2 = 987654319;
+const int b1 = 141, b2 = 277;
+int inp1, inp2;
+pair<int, int> pw[N], inpw[N];
+
+void precalc()
+{
+    pw[0] =  {1, 1};
+    for (int i = 1; i < N; i++)
+    {
+        pw[i].first = 1LL * pw[i - 1].first * b1 % MOD1;
+        pw[i].second = 1LL * pw[i - 1].second * b2 % MOD2;
+    }
+    inp2 = BigMod(b2, MOD2 - 2, MOD2);
+    inp1 = BigMod(b1, MOD1 - 2, MOD1);
+    inpw[0] =  {1, 1};
+    for (int i = 1; i < N; i++)
+    {
+        inpw[i].first = 1LL * inpw[i - 1].first * inp1 % MOD1;
+        inpw[i].second = 1LL * inpw[i - 1].second * inp2 % MOD2;
+    }
+}
+
+struct Hashing
+{
+    int sz;
+    string s; // 0 - indexed string
+    vector<pair<int, int>> h_tab; // 1 - indexed vector
+    Hashing() {}
+    Hashing(string _ss)
+    {
+        sz = _ss.size();
+        s = _ss;
+        h_tab.emplace_back(0, 0);
+        for (int i = 0; i < sz; i++)
+        {
+            pair<int, int> p;
+            p.first = (h_tab[i].first + 1LL * pw[i].first * s[i] % MOD1) % MOD1;
+            p.second = (h_tab[i].second + 1LL * pw[i].second * s[i] % MOD2) % MOD2;
+            h_tab.push_back(p);
+        }
+    }
+    pair<int, int> get_hash_value(int lo, int hi)   // 1 - indexed
+    {
+        if (lo > hi)
+            return {0, 0};
+        assert(1 <= lo && lo <= hi && hi <= sz);
+        pair<int, int> ans;
+        ans.first = (h_tab[hi].first - h_tab[lo - 1].first + MOD1) * 1LL * inpw[lo - 1].first % MOD1;
+        ans.second = (h_tab[hi].second - h_tab[lo - 1].second + MOD2) * 1LL * inpw[lo - 1].second % MOD2;
+        return ans;
+    }
+    pair<int, int> get_hash_value()
+    {
+        return get_hash_value(1, sz);
+    }
+};
+
+pair<int, int> mer(pair<int,int> x, pair<int,int> y, int z) // z - length of x
+{
+    pair<int,int> an;
+    an.first = (x.first + (1LL * pw[z].first * y.first) % MOD1) % MOD1;
+    an.second = (x.second + (1LL * pw[z].second * y.second) % MOD2) % MOD2;
+    return an;
+}
+
+
+
+void do_the_honour(){
+
+    int n,k;cin >> n >> k;
+    string s;cin >> s;
+
+    string ans1;
+    for(int i=0;i<n/k;i++){
+        for(int j=0;j<k;j++) ans1+=(i%2?'1':'0');
+    }
+    string ans2;
+    for(int i=0;i<n/k;i++) for(int j=0;j<k;j++) ans2+=(i%2?'0':'1');
+    //cout << ans1 << endl<<ans2 << endl;
+    Hashing ps(s),an1(ans1),an2(ans2);
+    reverse(s.begin(),s.end());
+    Hashing revs(s);
+
+    for(int i=1;i<=n;i++){
+        pair<int,int>f=revs.get_hash_value(n-i+1,n);
+        pair<int,int>sc=ps.get_hash_value(i+1,n);
+        pair<int,int>pp=mer(sc,f,n-i);
+        if(pp==an1.get_hash_value() or an2.get_hash_value()==pp){
+            cout << i << endl;return;
+        }
+    }
+    cout << -1 << endl;
+
+
+}
+
+signed main(){
+    optimize();
+    int t=1;
+    cin>>t;
+    precalc();
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+/////////////-------------------hashing again ends-------------------
+
+////////---------------------Kosharaju's algorithm----------
+#include<bits/stdc++.h>
+#define ll long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+vector<int>adj[200010];
+vector<int>trans[200010];
+vector<bool> vis(200010,false);
+vector<int>v,x;
+
+void dfs(int node){
+
+    vis[node]=1;
+    for(auto u:adj[node]){
+        if(vis[u]) continue;
+        dfs(u);
+    }
+    v.push_back(node);
+}
+
+void dfs2(int node){
+
+
+    //cout << node << " ";
+    vis[node]=1;
+    for(auto u:trans[node]){
+        if(vis[u]) continue;
+        dfs2(u);
+    }
+    x.push_back(node);
+}
+
+void do_the_honour(){
+
+    int n;cin >> n;
+    int m;cin >> m;
+
+    for(int i=0;i<m;i++){
+        int x,y; cin >> x >> y;
+        adj[x].push_back(y);
+        trans[y].push_back(x);
+    }
+
+
+
+    v.clear();
+    for(int i=1;i<=n;i++) if(vis[i]==0) dfs(i);
+
+    for(int i=0;i<200010;i++) vis[i]=false;
+
+    reverse(v.begin(),v.end());
+
+    int cc=0;
+    vector<vector<int>>ans;
+    int xx=0,xy=0;
+    for(auto u:v){
+        if(vis[u]) continue;
+        if(ans.size()==0) xx=u;
+        else xy=u;
+        x.clear();
+        dfs2(u);
+        ans.push_back(x);
+        cc++;
+       // cout << endl;
+    }
+    if(ans.size()>1){
+        cout << "NO" << endl;
+        cout << xy<< " " << xx << endl;
+    }
+    else{
+        cout << "YES" << endl;
+    }
+
+}
+
+void reset(){
+     for(int i=0;i<200010;i++){
+        adj[i].clear();
+        vis[i]=0;
+        v.clear();
+        trans[i].clear();
+     }
+}
+
+int main(){
+    optimize();
+    int t=1;
+   // cin>>t;
+    for(int z=1;z<=t;z++){
+
+    reset();
+    do_the_honour();
+
+
+}
+    return 0;
+}
+////////////------------------------kosaraju ends ------------------------
+
+//////////////////-------------------- backedge detection in a undirected graph-----
+
+void Graph::dfs(int v, int parent) {
+    visited[v] = true;
+    tin[v] = low[v] = timer++;
+    subtreeSize[v] = 1;
+ 
+    for (int to : adj[v]) {
+        if (to == parent) continue;
+        if (visited[to]) {
+            low[v] = min(low[v], tin[to]);
+        } else {
+            dfs(to, v);
+            low[v] = min(low[v], low[to]);
+            if (low[to] > tin[v]) {
+                // Back edge detected between v and to
+                int x = subtreeSize[to];
+                int y = vertices - x;
+                totalPairs = min(totalPairs, calculatePairs(x) + calculatePairs(y));
+            }
+            subtreeSize[v] += subtreeSize[to];
+        }
+    }
+}
+ 
+void Graph::countSubtreeSizes(int v, int parent) {
+    visited[v] = true;
+    subtreeSize[v] = 1;
+    for (int to : adj[v]) {
+        if (to != parent && !visited[to]) {
+            countSubtreeSizes(to, v);
+            subtreeSize[v] += subtreeSize[to];
+        }
+    }
+}
+
+///////////////---------------backedge detection ends----------------------
+
+--------------Hoptcroft Algo-------------------------
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAXN = 3001;
+
+int n, m, k;
+vector<int> adj[MAXN]; // adjacency from left nodes
+int pairU[MAXN], pairV[MAXN], dist[MAXN];
+
+bool bfs() {
+    queue<int> q;
+    for (int u = 1; u <= n; u++) {
+        if (pairU[u] == 0) {
+            dist[u] = 0;
+            q.push(u);
+        } else {
+            dist[u] = INT_MAX;
+        }
+    }
+    dist[0] = INT_MAX;
+
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        if (dist[u] < dist[0]) {
+            for (int v : adj[u]) {
+                if (dist[pairV[v]] == INT_MAX) {
+                    dist[pairV[v]] = dist[u] + 1;
+                    q.push(pairV[v]);
+                }
+            }
+        }
+    }
+    return dist[0] != INT_MAX;
+}
+
+bool dfs(int u) {
+    if (u == 0) return true;
+    for (int v : adj[u]) {
+        if (dist[pairV[v]] == dist[u] + 1) {
+            if (dfs(pairV[v])) {
+                pairU[u] = v;
+                pairV[v] = u;
+                return true;
+            }
+        }
+    }
+    dist[u] = INT_MAX;
+    return false;
+}
+
+int hopcroft_karp() {
+    fill(pairU, pairU + MAXN, 0);
+    fill(pairV, pairV + MAXN, 0);
+    int matching = 0;
+
+    while (bfs()) {
+        for (int u = 1; u <= n; u++) {
+            if (pairU[u] == 0 && dfs(u)) {
+                matching++;
+            }
+        }
+    }
+    return matching;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int k; 
+    cin >> n >> m >> k;
+    for (int i = 0; i < k; i++) {
+        int u, v; 
+        cin >> u >> v;
+        adj[u].push_back(v); // left u → right v
+    }
+
+    int max_matching = hopcroft_karp();
+    cout << max_matching << "\n";
+
+    for (int u = 1; u <= n; u++) {
+        if (pairU[u] != 0) {
+            cout << u << " " << pairU[u] << "\n";
+        }
+    }
+    return 0;
+}
+
+
+
+
+
+---------------------hungarian algorithm--------------------
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAXN = 501; // maximum nodes on each side
+const long long INF = 1e18;
+
+int n, m; // n = left nodes, m = right nodes
+long long cost[MAXN][MAXN]; // cost[i][j] = weight of edge from left i to right j
+long long u[MAXN], v[MAXN]; // potentials
+int p[MAXN], way[MAXN];
+
+long long hungarian() {
+    vector<long long> minv(m + 1);
+    vector<bool> used(m + 1);
+    fill(p, p + m + 1, 0);
+
+    for (int i = 1; i <= n; i++) {
+        p[0] = i;
+        int j0 = 0;
+        minv.assign(m + 1, INF);
+        used.assign(m + 1, false);
+
+        do {
+            used[j0] = true;
+            int i0 = p[j0];
+            long long delta = INF;
+            int j1 = -1;
+
+            for (int j = 1; j <= m; j++) {
+                if (!used[j]) {
+                    long long cur = cost[i0][j] - u[i0] - v[j];
+                    if (cur < minv[j]) {
+                        minv[j] = cur;
+                        way[j] = j0;
+                    }
+                    if (minv[j] < delta) {
+                        delta = minv[j];
+                        j1 = j;
+                    }
+                }
+            }
+
+            for (int j = 0; j <= m; j++) {
+                if (used[j]) {
+                    u[p[j]] += delta;
+                    v[j] -= delta;
+                } else {
+                    minv[j] -= delta;
+                }
+            }
+            j0 = j1;
+        } while (p[j0] != 0);
+
+        // augmenting path
+        do {
+            int j1 = way[j0];
+            p[j0] = p[j1];
+            j0 = j1;
+        } while (j0 != 0);
+    }
+
+    long long ans = 0;
+    for (int j = 1; j <= m; j++) {
+        if (p[j] != 0) ans += cost[p[j]][j];
+    }
+    return ans;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int k;
+    cin >> n >> m >> k;
+    // initialize cost matrix to 0 (or negative INF if no edge)
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            cost[i][j] = 0; // or -INF if you want missing edges
+
+    for (int i = 0; i < k; i++) {
+        int u, v, w;
+        cin >> u >> v >> w;
+        cost[u][v] = w; // 1-based indexing
+    }
+
+    long long maxWeightMatching = hungarian();
+    cout << maxWeightMatching << "\n";
+
+    // to print matching pairs
+    vector<int> match(n + 1, 0);
+    for (int j = 1; j <= m; j++) {
+        if (p[j] != 0) match[p[j]] = j;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        if (match[i] != 0) {
+            cout << i << " " << match[i] << "\n";
+        }
+    }
+
+    return 0;
+}
+
+----------------Finding bridges then create bridgetree then find the middle node of diameter-------
+
+
+/** @xigua */
+#include<cstdio>
+#include<cmath>
+#include<iostream>
+#include<algorithm>
+#include<vector>
+#include<stack>
+#include<cstring>
+#include<queue>
+#include<set>
+#include<string>
+#include<map>
+#include<climits>
+#define PI acos(-1)
+using namespace std;
+typedef long long ll;
+typedef double db;
+const int maxn = 1e5 + 5;
+const int mod = 1e9 + 7;
+const int INF = 1e8 + 5;
+const ll inf = 1e15 + 5;
+const db eps = 1e-9;
+
+struct Edge {
+    ll u, v, c;
+} e[maxn<<2];
+struct Ed {
+    ll v, c;
+};
+int n, m, low[maxn], pre[maxn], tim, ebcc_cnt, du[maxn];
+ll k, len, dis[maxn][2];
+vector<int> G[maxn];
+vector<Ed> ed[maxn];
+int isbri[maxn<<4];
+bool vis[maxn];
+
+void init() {
+    ebcc_cnt = tim = 0;
+    for (int i = 1; i <= n; i++) G[i].clear();
+    memset(isbri, 0, sizeof(isbri));
+    memset(pre, 0, sizeof(pre));
+    memset(du, 0, sizeof(du));
+}
+
+void tarjan(int u, int fa) {
+    low[u] = pre[u] = ++tim;
+    for (int i = 0; i < G[u].size(); i++) {
+        int tmp = G[u][i];
+        int v = e[tmp].v;
+        if (!pre[v]) {
+            tarjan(v, u);
+            low[u] = min(low[u], low[v]);
+            if (low[v] > pre[u]) // 子节点的反向边大于当前节点
+                isbri[tmp] = isbri[tmp^1] = true; //标记为桥
+        }
+        else if (fa != v) // fa很重要 对于桥
+            low[u] = min(low[u], pre[v]);
+    }
+}
+
+void dfs(int u) {
+    pre[u] = ebcc_cnt;
+    for (int i = 0; i < G[u].size(); i++) {
+        int tmp = G[u][i];
+        if (isbri[tmp]) continue;
+        int v = e[tmp].v;
+        if (pre[v]) continue;
+        dfs(v);
+    }
+}
+
+void find_ebcc() {
+    tarjan(1, -1);
+    memset(pre, 0, sizeof(pre));
+    for (int i = 1; i <= n; i++) {
+        if (!pre[i]) {
+            ebcc_cnt++;
+            dfs(i);
+        }
+    }
+}
+
+
+
+void dijkstra(int s, int ca) {
+    vector<ll> dist(ebcc_cnt + 1, inf);
+    dist[s] = 0;
+    priority_queue<pair<ll,int>, vector<pair<ll,int>>, greater<pair<ll,int>>> pq;
+    pq.push({0, s});
+    while(!pq.empty()) {
+        auto [d, u] = pq.top(); pq.pop();
+        if(d > dist[u]) continue;
+        for(auto &edge : ed[u]) {
+            int v = edge.v;
+            ll w = edge.c;
+            if(dist[v] > dist[u] + w) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+    for(int i = 1; i <= ebcc_cnt; i++) dis[i][ca] = dist[i];
+}
+
+void solve() {
+    cin >> n >> m;
+    init();
+    for (int i = 1; i <= m; i++) {
+        int u, v, c; scanf("%d%d%d", &u, &v, &c);
+        e[i<<1|1].u = u, e[i<<1|1].v = v, e[i<<1|1].c = c;
+        e[i<<1].u = v, e[i<<1].v = u, e[i<<1].c = c;
+        G[u].push_back(i<<1|1);
+        G[v].push_back(i<<1);
+    }
+    find_ebcc();
+    int tot = m<<1|1;
+    for (int i = 1; i <= ebcc_cnt; i++) ed[i].clear();
+    for (int i = 1; i <= tot; i += 2) {
+        if (isbri[i]) {
+            int u = e[i].v, v = e[i].u;
+            ed[pre[u]].push_back((Ed){pre[v], e[i].c});
+            ed[pre[v]].push_back((Ed){pre[u], e[i].c});
+        }
+    }
+
+    cerr << "EBCC Graph (Nodes = 1 to " << ebcc_cnt << "):" << endl;
+    for (int i = 1; i <= ebcc_cnt; i++) {
+        cerr << "Component " << i << ": ";
+        for (auto &edge : ed[i]) {
+            cerr << "(" << i << "->" << edge.v << ", w=" << edge.c << ") ";
+        }
+        cerr << endl;
+    }
+
+    int start = 1;
+    dijkstra(start, 0);
+    ll farthestDist = -1; int farthestNode = start;
+    for(int i = 1; i <= ebcc_cnt; i++) {
+        if(dis[i][0] > farthestDist) {
+            farthestDist = dis[i][0];
+            farthestNode = i;
+        }
+    }
+
+    dijkstra(farthestNode, 0);
+    ll diameter = -1; int otherEnd = farthestNode;
+    for(int i = 1; i <= ebcc_cnt; i++) {
+        if(dis[i][0] > diameter) {
+            diameter = dis[i][0];
+            otherEnd = i;
+        }
+    }
+
+    dijkstra(otherEnd, 1);
+    ll inx = n + 1, dd = inf;
+    for (int i = 1; i <= n; i++) {
+        int pr = pre[i];
+        if (dis[pr][0] + dis[pr][1] != diameter) continue;
+        ll tmp = max(dis[pr][0], dis[pr][1]);
+        if (tmp < dd) {
+            inx = i;
+            dd = tmp;
+        }
+    }
+    cout << inx << ' ' << dd << endl;
+}
+
+
+
+int main() {
+    //cin.sync_with_stdio(false);
+    //freopen("tt.txt", "r", stdin);
+    //freopen("hh.txt", "w", stdout);
+    int t = 1; cin >> t;
+
+    while (t--) {
+        solve();
+    }
+    return 0;
+}
+
+
+
+
+/////////---------------EBCC-------------------
+
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct EBCC {
+    int n;
+    vector<vector<int>> adj;
+    vector<pair<int,int>> edges;
+    vector<bool> isBridge;
+    vector<int> comp;
+    vector<int> tin, low;
+    int timer, compCount;
+
+    EBCC(int nodes) {
+        n = nodes;
+        adj.assign(n+1, vector<int>());
+        comp.assign(n+1, -1);
+        tin.assign(n+1, 0);
+        low.assign(n+1, 0);
+        edges.clear();
+        isBridge.clear();
+        timer = 0;
+        compCount = 0;
+    }
+
+    void addEdge(int u, int v) {
+        adj[u].push_back(edges.size());
+        adj[v].push_back(edges.size());
+        edges.push_back({u,v});
+        isBridge.push_back(false);
+    }
+
+    void dfsBridges(int v, int p) {
+        tin[v] = low[v] = ++timer;
+        for(int idx : adj[v]) {
+            int u = edges[idx].first == v ? edges[idx].second : edges[idx].first;
+            if(u == p) continue;
+            if(!tin[u]) {
+                dfsBridges(u, v);
+                low[v] = min(low[v], low[u]);
+                if(low[u] > tin[v]) isBridge[idx] = true;
+            } else {
+                low[v] = min(low[v], tin[u]);
+            }
+        }
+    }
+
+    void dfsComp(int v, int id) {
+        comp[v] = id;
+        for(int idx : adj[v]) {
+            if(isBridge[idx]) continue;
+            int u = edges[idx].first == v ? edges[idx].second : edges[idx].first;
+            if(comp[u] == -1) dfsComp(u, id);
+        }
+    }
+
+    vector<int> getEBCC() {
+        for(int i=1;i<=n;i++) if(!tin[i]) dfsBridges(i,-1);
+        for(int i=1;i<=n;i++) if(comp[i]==-1) dfsComp(i, compCount++);
+        return comp;
+    }
+};
+
+int main() {
+    int n, m;
+    cin >> n >> m;
+    EBCC solver(n);
+    for(int i=0;i<m;i++){
+        int u, v; cin >> u >> v;
+        solver.addEdge(u,v);
+    }
+    vector<int> comp = solver.getEBCC();
+    for(int i=1;i<=n;i++)
+        cout << "Node " << i << " in EBCC " << comp[i] << "\n";
+}
+
+
+
+--------------2-SAT--------------
+// C++ implementation to find if the given
+// expression is satisfiable using the
+// Kosaraju's Algorithm
+#include <bits/stdc++.h>
+using namespace std;
+ 
+const int MAX = 300000;
+ 
+// data structures used to implement Kosaraju's
+// Algorithm. Please refer
+// https://www.geeksforgeeks.org/strongly-connected-components/
+vector<int> adj[MAX];
+vector<int> adjInv[MAX];
+bool visited[MAX];
+bool visitedInv[MAX];
+stack<int> s;
+ 
+// this array will store the SCC that the
+// particular node belongs to
+int scc[MAX];
+ 
+// counter maintains the number of the SCC
+int counter = 1;
+ 
+// adds edges to form the original graph
+void addEdges(int a, int b)
+{
+    adj[a].push_back(b);
+}
+ 
+// add edges to form the inverse graph
+void addEdgesInverse(int a, int b)
+{
+    adjInv[b].push_back(a);
+}
+ 
+// for STEP 1 of Kosaraju's Algorithm
+void dfsFirst(int u)
+{
+    if(visited[u])
+        return;
+ 
+    visited[u] = 1;
+ 
+    for (int i=0;i<adj[u].size();i++)
+        dfsFirst(adj[u][i]);
+ 
+    s.push(u);
+}
+ 
+// for STEP 2 of Kosaraju's Algorithm
+void dfsSecond(int u)
+{
+    if(visitedInv[u])
+        return;
+ 
+    visitedInv[u] = 1;
+ 
+    for (int i=0;i<adjInv[u].size();i++)
+        dfsSecond(adjInv[u][i]);
+ 
+    scc[u] = counter;
+}
+ 
+// function to check 2-Satisfiability
+bool is2Satisfiable(int n, int m, int a[], int b[])
+{
+    // adding edges to the graph
+    for(int i=0;i<m;i++)
+    {
+        // variable x is mapped to x
+        // variable -x is mapped to n+x = n-(-x)
+ 
+        // for a[i] or b[i], addEdges -a[i] -> b[i]
+        // AND -b[i] -> a[i]
+        if (a[i]>0 && b[i]>0)
+        {
+            addEdges(a[i]+n, b[i]);
+            addEdgesInverse(a[i]+n, b[i]);
+            addEdges(b[i]+n, a[i]);
+            addEdgesInverse(b[i]+n, a[i]);
+        }
+ 
+        else if (a[i]>0 && b[i]<0)
+        {
+            addEdges(a[i]+n, n-b[i]);
+            addEdgesInverse(a[i]+n, n-b[i]);
+            addEdges(-b[i], a[i]);
+            addEdgesInverse(-b[i], a[i]);
+        }
+ 
+        else if (a[i]<0 && b[i]>0)
+        {
+            addEdges(-a[i], b[i]);
+            addEdgesInverse(-a[i], b[i]);
+            addEdges(b[i]+n, n-a[i]);
+            addEdgesInverse(b[i]+n, n-a[i]);
+        }
+ 
+        else
+        {
+            addEdges(-a[i], n-b[i]);
+            addEdgesInverse(-a[i], n-b[i]);
+            addEdges(-b[i], n-a[i]);
+            addEdgesInverse(-b[i], n-a[i]);
+        }
+    }
+ 
+    // STEP 1 of Kosaraju's Algorithm which
+    // traverses the original graph
+    for (int i=1;i<=2*n;i++)
+        if (!visited[i])
+            dfsFirst(i);
+ 
+    // STEP 2 of Kosaraju's Algorithm which
+    // traverses the inverse graph. After this,
+    // array scc[] stores the corresponding value
+    while (!s.empty())
+    {
+        int n = s.top();
+        s.pop();
+ 
+        if (!visitedInv[n])
+        {
+            dfsSecond(n);
+            counter++;
+        }
+    }
+ 
+    for (int i=1;i<=n;i++)
+    {
+        // for any 2 variable x and -x lie in
+        // same SCC
+        if(scc[i]==scc[i+n])
+        {
+ 
+            return false;
+        }
+    }
+ 
+    // no such variables x and -x exist which lie
+    // in same SCC
+    return true;
+}
+ 
+//  Driver function to test above functions
+int main()
+{
+    // n is the number of variables
+    // 2n is the total number of nodes
+    // m is the number of clauses
+    int n = 5, m = 7;
+    cin >> m >> n;
+    // each clause is of the form a or b
+    // for m clauses, we have a[m], b[m]
+    // representing a[i] or b[i]
+ 
+    // Note:
+    // 1 <= x <= N for an uncomplemented variable x
+    // -N <= x <= -1 for a complemented variable x
+    // -x is the complement of a variable x
+ 
+    // The CNF being handled is:
+    // '+' implies 'OR' and '*' implies 'AND'
+    // (x1+x2)*(x2�+x3)*(x1�+x2�)*(x3+x4)*(x3�+x5)*
+    // (x4�+x5�)*(x3�+x4)
+    int a[m],b[m];
+ 
+    for(int i=0;i<m;i++){
+        char c,d;
+        int x,y;
+        cin >> c >> x>> d >> y;
+        if(c=='-') x*=-1;
+        if(d=='-') y*=-1;
+        a[i]=x;
+        b[i]=y;
+ 
+    }
+ 
+    // We have considered the same example for which
+    // Implication Graph was made
+    if(!is2Satisfiable(n, m, a, b)) cout << "IMPOSSIBLE" << endl;
+    else {
+        for(int i=1;i<=n;i++){
+            if(scc[i]<scc[i+n]) cout <<"-";
+            else cout << "+"  ;
+        }
+    }
+ 
+    return 0;
+
+
+
+
+///hoptcroft algo
+
+#include <bits/stdc++.h>
+#define ll long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define endl '\n'
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+int n, m;
+vector<vector<int>> g;
+vector<int> dist, matchL, matchR;
+
+bool bfs() {
+    queue<int> q;
+    for (int i = 1; i <= n; i++) {
+        if (matchL[i] == 0) {
+            dist[i] = 0;
+            q.push(i);
+        } else dist[i] = -1;
+    }
+
+    bool found = false;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        for (int v : g[u]) {
+            if (matchR[v] == 0) found = true;
+            else if (dist[matchR[v]] == -1) {
+                dist[matchR[v]] = dist[u] + 1;
+                q.push(matchR[v]);
+            }
+        }
+    }
+    return found;
+}
+
+bool dfs(int u) {
+    for (int v : g[u]) {
+        if (matchR[v] == 0 || (dist[matchR[v]] == dist[u] + 1 && dfs(matchR[v]))) {
+            matchL[u] = v;
+            matchR[v] = u;
+            return true;
+        }
+    }
+    dist[u] = -1;
+    return false;
+}
+
+int hopcroft_karp() {
+    matchL.assign(n + 1, 0);
+    matchR.assign(m + 1, 0);
+    dist.assign(n + 1, -1);
+
+    int matching = 0;
+    while (bfs()) {
+        for (int i = 1; i <= n; i++)
+            if (matchL[i] == 0 && dfs(i))
+                matching++;
+    }
+    return matching;
+}
+
+void do_the_honour() {
+    cin >> n;
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; i++) cin >> a[i];
+
+    int maxA = *max_element(a.begin() + 1, a.end());
+    vector<set<int>> adj(n + 2);
+    for (int i = 1; i <= n; i++) adj[a[i]].insert(i);
+
+    vector<pair<int, int>> edges;
+
+    for (int i = 1; i < n; i++) {
+        if (adj[i].empty() || adj[i + 1].empty()) continue;
+
+        vector<int> vec(adj[i].begin(), adj[i].end());
+        reverse(vec.begin(), vec.end());
+        for (int u : vec) {
+            if (adj[i + 1].empty()) break;
+            int v = *prev(adj[i + 1].end());
+            if (v > u) {
+                if (i % 2 == 1) edges.push_back({u, v});
+                else edges.push_back({v, u});
+                adj[i + 1].erase(prev(adj[i + 1].end()));
+            }
+        }
+
+    }
+
+    m = n;
+    g.assign(n + 1, {});
+    for (auto [u, v] : edges)
+        if (u >= 1 && u <= n && v >= 1 && v <= m)
+            g[u].push_back(v);
+
+    cout << hopcroft_karp() << endl;
+}
+
+int main() {
+    optimize();
+    int t; cin >> t;
+    while (t--) do_the_honour();
+    return 0;
+}
+
+////////-------------Chinese remainder theorem------
+
+
+#include<bits/stdc++.h>
+#define ll long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+
+#define endl '\n'
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+
+ll ext_gcd(ll a,ll b,ll *x,ll *y)
+{
+    if (a == 0)
+        {
+            *x = 0;
+            *y = 1;
+            return b;
+        }
+    ll x1, y1;
+    ll d = ext_gcd(b % a, a, &x1, &y1);
+    *x = y1 - (b / a) * x1;
+    *y = x1;
+    return d;
+}
+class ChineseRemainderTheorem
+{
+    typedef long long vlong;
+    typedef pair<vlong,vlong> pll;
+    /** CRT Equations stored as pairs of vectors. See
+    addEquation()*/
+    vector<pll> equations;
+public:
+    void clear()
+    {
+        equations.clear();
+    }
+    /** Add equation of the form x = r (mod m)*/
+    void addEquation( vlong r, vlong m )
+    {
+        equations.push_back({r, m});
+    }
+    pll solve()
+    {
+        if (equations.size() == 0)
+            return {-1,-1}; /// No equations to solve
+        vlong a1 = equations[0].first;
+        vlong m1 = equations[0].second;
+        a1 %= m1;
+        /** Initially x = a_0 (mod m_0)*/
+        /** Merge the solution with remaining equations */
+        for ( int i = 1; i < equations.size(); i++ )
+            {
+                vlong a2 = equations[i].first;
+                vlong m2 = equations[i].second;
+                vlong g = __gcd(m1, m2);
+                if ( a1 % g != a2 % g )
+                    return {-1,-1}; ///Conflict in equations
+                /** Merge the two equations**/
+                vlong p, q;
+                ext_gcd(m1/g, m2/g, &p, &q);
+                vlong mod = m1 / g * m2;
+                vlong x = ( (__int128)a1 * (m2/g) % mod *q % mod
+                            + (__int128)a2 * (m1/g) % mod * p % mod ) %
+                          mod;
+                /** Merged equation*/
+                a1 = x;
+                if ( a1 < 0 )
+                    a1 += mod;
+                m1 = mod;
+            }
+        return {a1, m1};
+    }
+};
+
+
+
+
+void do_the_honour(){
+
+
+    ChineseRemainderTheorem crt;
+    int n;cin >> n;
+    string s; cin >> s;
+
+    bool vis[n]={0};
+    int rem=n;
+    for(int i=0;i<n;i++){
+        int cnt=0;
+        for(int j=0;j<n;j++){
+            if(vis[j]) continue;
+            if(j==s[i]-'A'){
+                crt.addEquation(cnt,rem);
+                rem--;
+                vis[j]=1;
+                break;
+            }
+            cnt++;
+
+        }
+    }
+    pair<ll,ll>ans=crt.solve();
+    if(ans.first==-1) no;
+    else {yes;cout << ans.first << endl;}
+
+}
+
+int32_t main(){
+    optimize();
+    int t=1;
+   // cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+
+
+
+----////// merge for sharing multiple prime factor------
+
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+
+// Extended GCD
+ll ext_gcd(ll a,ll b,ll &x,ll &y){
+    if(a==0){ x=0; y=1; return b; }
+    ll x1,y1;
+    ll d=ext_gcd(b%a,a,x1,y1);
+    x=y1-(b/a)*x1; y=x1;
+    return d;
+}
+
+// Merge two congruences: x ≡ a1 (mod m1), x ≡ a2 (mod m2)
+pair<ll,ll> merge_two(pair<ll,ll> eq1, pair<ll,ll> eq2){
+    ll a1=eq1.first, m1=eq1.second;
+    ll a2=eq2.first, m2=eq2.second;
+
+    ll g=__gcd(m1,m2);
+    if( (a2 - a1) % g != 0) return {-1,-1}; // no solution
+
+    ll p,q;
+    ext_gcd(m1/g, m2/g, p,q);
+
+    ll mod = m1/g * m2; // lcm
+    ll x = ( (__int128)a1*(m2/g)%mod*q%mod + (__int128)a2*(m1/g)%mod*p%mod ) % mod;
+    if(x<0) x+=mod;
+    return {x, mod};
+}
+
+// Merge vector of prime-power solutions
+pair<ll,ll> merge_all(vector<pair<ll,ll>> &eqs){
+    pair<ll,ll> ans = eqs[0];
+    for(int i=1;i<eqs.size();i++){
+        ans = merge_two(ans, eqs[i]);
+        if(ans.first==-1) return {-1,-1}; // infeasible
+    }
+    return ans;
+}
+
+int main(){
+    vector<pair<ll,ll>> prime_power_solutions = {
+        {2,8}, // solution modulo 2^3
+        {5,9}, // solution modulo 3^2
+        {5,5}  // solution modulo 5^1
+    };
+
+    auto ans = merge_all(prime_power_solutions);
+    if(ans.first==-1) cout<<"No solution"<<endl;
+    else cout<<"x ≡ "<<ans.first<<" (mod "<<ans.second<<")"<<endl;
+}
+
+
+//////////------------
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+using ll = long long;
+const int MAXN = 100010;
+const int LOG = 18; // enough for 1e5 nodes
+
+const ll M1 = 1000000007LL;
+const ll M2 = 1000000009LL;
+
+int N;
+vector<int> adj[MAXN];
+char labelc[MAXN];
+int depth_[MAXN];
+int up[MAXN][LOG];
+pair<ll,ll> hash_val[MAXN];
+ll pow1[MAXN], pow2[MAXN];
+
+ll B1, B2;
+
+ll addmod(ll a, ll b, ll m){ a+=b; if(a>=m) a-=m; return a;}
+ll submod(ll a, ll b, ll m){ a-=b; if(a<0) a+=m; return a;}
+ll mulmod(ll a, ll b, ll m){
+    return (long long)((__int128)a * b % m);
+}
+
+void dfs1(int node, int par, int dep){
+    depth_[node] = dep;
+    up[node][0] = par;
+    if(node != 1){
+        ll v = (labelc[node]-'a'+1);
+        hash_val[node].first = addmod(mulmod(hash_val[par].first, B1, M1), v, M1);
+        hash_val[node].second = addmod(mulmod(hash_val[par].second, B2, M2), v, M2);
+    } else {
+        hash_val[node] = {0,0};
+    }
+    for(int ch: adj[node]){
+        if(ch==par) continue;
+        dfs1(ch, node, dep+1);
+    }
+}
+
+int get_ancestor(int node, int jumps){
+    for(int j=0; j<LOG && node; ++j){
+        if(jumps & (1<<j)) node = up[node][j];
+    }
+    return node;
+}
+
+// get hash of suffix of length len ending at 'node' (len in edges/characters)
+pair<ll,ll> get_hash(int node, int len){
+    if(len == 0) return {0,0};
+    // ancestor at depth = depth[node] - len  => move up 'len' steps
+    int anc = get_ancestor(node, len);
+    ll h1 = submod(hash_val[node].first, mulmod(hash_val[anc].first, pow1[len], M1), M1);
+    ll h2 = submod(hash_val[node].second, mulmod(hash_val[anc].second, pow2[len], M2), M2);
+    return {h1,h2};
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+#if 1
+    // random bases but fixed seed for reproducibility on judge
+    std::mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+    B1 = (ll)(rng()%1000000 + 911382323); // reasonably large
+    B2 = (ll)(rng()%1000000 + 972663749);
+#else
+    B1 = 911382323;
+    B2 = 972663749;
+#endif
+
+    if(!(cin >> N)) return 0;
+    vector<int> parents(N-1);
+    for(int i=0;i<N-1;i++) cin >> parents[i];
+    string labs; cin >> labs;
+    for(int i=1;i<=N;i++){
+        adj[i].clear();
+        labelc[i] = 0;
+        for(int j=0;j<LOG;j++) up[i][j] = 0;
+        hash_val[i] = {0,0};
+    }
+    for(int i=0;i<N-1;i++){
+        int child = i+2, p = parents[i];
+        adj[p].push_back(child);
+        // store the label on the child node (edge p -> child)
+        labelc[child] = labs[i];
+    }
+
+    // powers
+    pow1[0]=pow2[0]=1;
+    for(int i=1;i<=N;i++){
+        pow1[i] = mulmod(pow1[i-1], B1, M1);
+        pow2[i] = mulmod(pow2[i-1], B2, M2);
+    }
+
+    // build hashes and up[ ][0]
+    dfs1(1, 0, 0);
+
+    // binary lifting
+    for(int j=1;j<LOG;j++){
+        for(int i=1;i<=N;i++){
+            int mid = up[i][j-1];
+            up[i][j] = mid ? up[mid][j-1] : 0;
+        }
+    }
+
+    ll answer = 0;
+    // dfs2 but iterative stack to avoid recursion depth issues
+    vector<pair<int,int>> st;
+    st.push_back({1,0});
+    while(!st.empty()){
+        auto [node,par] = st.back(); st.pop_back();
+        int L = depth_[node];
+        if(L > 0){
+            // compute divisors of L
+            vector<int> divs;
+            for(int d=1; (ll)d*d <= L; ++d){
+                if(L % d == 0){
+                    divs.push_back(d);
+                    if(d != L/d) divs.push_back(L/d);
+                }
+            }
+            sort(divs.begin(), divs.end());
+            int min_p = 0;
+            for(int p : divs){
+                if(p > L/2) continue; // must repeat at least twice
+                // check periodicity: s[1..L-p] == s[p+1..L]
+                // s[p+1..L] is suffix of length L-p ending at node -> get_hash(node, L-p)
+                // s[1..L-p] is prefix ending at depth L-p node: that node is ancestor by moving up p steps:
+                int prefix_end_node = get_ancestor(node, p); // moves up p steps -> depth L-p
+                auto h_suffix = get_hash(node, L-p);
+                auto h_prefix = get_hash(prefix_end_node, L-p);
+                if(h_suffix == h_prefix){
+                    min_p = p;
+                    break;
+                }
+            }
+            answer = max(answer, (ll)min_p);
+        }
+        for(int ch: adj[node]) if(ch != par) st.push_back({ch, node});
+    }
+
+    cout << answer << '\n';
+    return 0;
+}
+
+//l to r range point update and l to r rage value > k
+
+#include<bits/stdc++.h>
+#define ll long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+struct PosNode {
+    int sum = 0;
+    PosNode* left = nullptr;
+    PosNode* right = nullptr;
+};
+
+PosNode* update_pos(PosNode* cur, int l, int r, int idx, int delta) {
+    PosNode* neu = new PosNode();
+    if (l == r) {
+        neu->sum = (cur ? cur->sum : 0) + delta;
+        return neu;
+    }
+    int mid = (l + r) / 2;
+    if (idx <= mid) {
+        neu->left = update_pos(cur ? cur->left : nullptr, l, mid, idx, delta);
+        neu->right = cur ? cur->right : nullptr;
+    } else {
+        neu->left = cur ? cur->left : nullptr;
+        neu->right = update_pos(cur ? cur->right : nullptr, mid + 1, r, idx, delta);
+    }
+    neu->sum = (neu->left ? neu->left->sum : 0) + (neu->right ? neu->right->sum : 0);
+    return neu;
+}
+
+int query_pos(PosNode* cur, int l, int r, int ql, int qr) {
+    if (!cur) return 0;
+    if (ql <= l && r <= qr) return cur->sum;
+    int mid = (l + r) / 2;
+    int res = 0;
+    if (ql <= mid) res += query_pos(cur->left, l, mid, ql, qr);
+    if (qr > mid) res += query_pos(cur->right, mid + 1, r, ql, qr);
+    return res;
+}
+
+struct ValNode {
+    PosNode* proot = nullptr;
+    ValNode* left = nullptr;
+    ValNode* right = nullptr;
+};
+
+ValNode* update_val(ValNode* cur, int l, int r, int idx, int delta, int pos_idx, int n) {
+    ValNode* neu = new ValNode();
+    if (cur) {
+        neu->left = cur->left;
+        neu->right = cur->right;
+        neu->proot = cur->proot;
+    }
+    neu->proot = update_pos(neu->proot, 1, n, pos_idx, delta);
+    if (l == r) {
+        return neu;
+    }
+    int mid = (l + r) / 2;
+    if (idx <= mid) {
+        neu->left = update_val(cur ? cur->left : nullptr, l, mid, idx, delta, pos_idx, n);
+    } else {
+        neu->right = update_val(cur ? cur->right : nullptr, mid + 1, r, idx, delta, pos_idx, n);
+    }
+    return neu;
+}
+
+int query_val(ValNode* cur, int vl, int vr, int qvl, int qvr, int pl, int pr, int n) {
+    if (!cur) return 0;
+    if (qvl <= vl && vr <= qvr) {
+        return query_pos(cur->proot, 1, n, pl, pr);
+    }
+    int mid = (vl + vr) / 2;
+    int res = 0;
+    if (qvl <= mid) res += query_val(cur->left, vl, mid, qvl, qvr, pl, pr, n);
+    if (qvr > mid) res += query_val(cur->right, mid + 1, vr, qvl, qvr, pl, pr, n);
+    return res;
+}
+
+struct ArrNode {
+    int val = 0;
+    ArrNode* left = nullptr;
+    ArrNode* right = nullptr;
+};
+
+ArrNode* build_arr(const vector<int>& a, int l, int r) {
+    ArrNode* neu = new ArrNode();
+    if (l == r) {
+        neu->val = a[l];
+        return neu;
+    }
+    int mid = (l + r) / 2;
+    neu->left = build_arr(a, l, mid);
+    neu->right = build_arr(a, mid + 1, r);
+    return neu;
+}
+
+ArrNode* update_arr(ArrNode* cur, int l, int r, int idx, int newv) {
+    ArrNode* neu = new ArrNode();
+    if (cur) {
+        neu->left = cur->left;
+        neu->right = cur->right;
+        neu->val = cur->val;
+    }
+    if (l == r) {
+        neu->val = newv;
+        return neu;
+    }
+    int mid = (l + r) / 2;
+    if (idx <= mid) {
+        neu->left = update_arr(cur ? cur->left : nullptr, l, mid, idx, newv);
+    } else {
+        neu->right = update_arr(cur ? cur->right : nullptr, mid + 1, r, idx, newv);
+    }
+    return neu;
+}
+
+int get_arr(ArrNode* cur, int l, int r, int idx) {
+    if (l == r) return cur->val;
+    int mid = (l + r) / 2;
+    if (idx <= mid) return get_arr(cur->left, l, mid, idx);
+    else return get_arr(cur->right, mid + 1, r, idx);
+}
+
+class PersistentSegmentTree {
+private:
+    const int MINV = -1000000010;  // Adjust if needed for value range
+    const int MAXV = 1000000010;
+    int n;
+    vector<ValNode*> val_roots;
+    vector<ArrNode*> arr_roots;
+
+public:
+    PersistentSegmentTree(vector<int> initial) {  // initial[1..n]
+        n = initial.size() - 1;
+        arr_roots.push_back(nullptr);  // version 0
+        val_roots.push_back(nullptr);
+        ArrNode* init_arr = build_arr(initial, 1, n);
+        arr_roots.push_back(init_arr);
+        ValNode* curr_val = nullptr;
+        for (int i = 1; i <= n; ++i) {
+            int v = initial[i];
+            curr_val = update_val(curr_val, MINV, MAXV, v, 1, i, n);
+        }
+        val_roots.push_back(curr_val);  // version 1 is initial
+    }
+
+    // Update position pos to newv in given version, returns new version id
+    int update(int version, int pos, int newv) {
+        int oldv = get_arr(arr_roots[version], 1, n, pos);
+        ValNode* new_val = val_roots[version];
+        if (oldv != newv) {
+            new_val = update_val(new_val, MINV, MAXV, oldv, -1, pos, n);
+            new_val = update_val(new_val, MINV, MAXV, newv, 1, pos, n);
+        }
+        ArrNode* new_arr = update_arr(arr_roots[version], 1, n, pos, newv);
+        val_roots.push_back(new_val);
+        arr_roots.push_back(new_arr);
+        return val_roots.size() - 1;
+    }
+
+    // Query count of values > k in range [l, r] in given version
+    int query(int version, int l, int r, int k) {
+        if (k >= MAXV) return 0;
+        return query_val(val_roots[version], MINV, MAXV, max(k + 1, MINV), MAXV, l, r, n);
+    }
+};
+
+void do_the_honour() {
+int n, q;
+    cin >> n >> q;
+
+    vector<int> initial(n + 1);
+    for (int i = 1; i <= n; ++i) {
+        cin >> initial[i];
+    }
+
+    PersistentSegmentTree pst(initial);
+
+    int current_version = 1;  // Start with the initial version
+
+    for (int iq = 0; iq < q; ++iq) {
+        int type;
+        cin >> type;
+        if (type == 1) {  // Assuming type 1 is update: pos newv
+            int pos, newv;
+            cin >> pos >> newv;
+            current_version = pst.update(current_version, pos, newv);
+        } else if (type == 2) {  // Assuming type 2 is query: l r k
+            int l, r, k;
+            cin >> l >> r >> k;
+            int count = pst.query(current_version, l, r, k);
+            cout << count << '\n';
+        }
+    }
+}
+
+
+int main(){
+    optimize();
+    int t=1;
+    cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+}
+    return 0;
+}
+
+/////////area of convex and poligon to find concave poligon
+
+
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+
+// Point with an original index for marking hull membership
+struct P {
+    ll x, y;
+    int idx;
+};
+
+// cross(a→b, a→c) = (b−a)×(c−a)
+static ll cross(const P &a, const P &b, const P &c) {
+    return (b.x - a.x) * (c.y - a.y)
+         - (b.y - a.y) * (c.x - a.x);
+}
+// dot(a, b)
+static ll dot(const P &a, const P &b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+// Monotone‐chain hull. Returns points of the convex hull in CCW order,
+// with no repeated last point.  If |a| ≤ 1 it returns a itself.
+vector<P> convex_hull(vector<P> &a) {
+    int n = a.size(), k = 0;
+    if (n <= 1) return a;
+    sort(a.begin(), a.end(), [](auto &u, auto &v){
+        return u.x < v.x || (u.x == v.x && u.y < v.y);
+    });
+    vector<P> h(2*n);
+    // lower
+    for (int i = 0; i < n; i++) {
+        while (k >= 2 && cross(h[k-2], h[k-1], a[i]) <= 0) k--;
+        h[k++] = a[i];
+    }
+    // upper
+    for (int i = n-2, t = k+1; i >= 0; i--) {
+        while (k >= t && cross(h[k-2], h[k-1], a[i]) <= 0) k--;
+        h[k++] = a[i];
+    }
+    h.resize(k-1);
+    return h;
+}
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int T;
+    cin >> T;
+    while (T--) {
+        int n;
+        cin >> n;
+        vector<P> pts(n);
+        for (int i = 0; i < n; i++) {
+            cin >> pts[i].x >> pts[i].y;
+            pts[i].idx = i;
+        }
+        // 1) Build the outer convex hull H
+        vector<P> tmp = pts;
+        vector<P> H = convex_hull(tmp);
+        int h = H.size();
+        // If no interior points, no concave polygon possible
+        if (h == n) {
+            cout << -1 << "\n";
+            continue;
+        }
+        // Compute twice the area of H
+        __int128 A2 = 0;
+        for (int i = 0; i < h; i++) {
+            int j = (i+1)%h;
+            A2 += (__int128)H[i].x * H[j].y
+                - (__int128)H[i].y * H[j].x;
+        }
+        if (A2 < 0) A2 = -A2;  // ensure positive
+        // 2) Mark hull vertices, collect interior points
+        vector<char> onhull(n, 0);
+        for (auto &p : H) onhull[p.idx] = 1;
+        vector<P> inner;
+        inner.reserve(n-h);
+        for (auto &p : pts) if (!onhull[p.idx]) inner.push_back(p);
+        // 3) Convex hull of the interior points
+        vector<P> Q = convex_hull(inner);
+        int q = Q.size();
+        // 4) Rotating calipers to find
+        //    min_{edge (H[k],H[k+1]), p in Q}  ( (H[k+1]-H[k])×(p-H[k]) )
+        //    = min_p dot(p, w_k) - dot(H[k], w_k),  w_k = perp(H[k+1]-H[k]).
+        ll minDelta = LLONG_MAX;
+        int j = 0;  // pointer into Q
+        for (int k = 0; k < h; k++) {
+            int k2 = (k+1)%h;
+            // v = H[k2] - H[k]
+            P v{ H[k2].x - H[k].x, H[k2].y - H[k].y, -1 };
+            // w = perp(v) = (-v.y, v.x)
+            P w{ -v.y, v.x, -1 };
+            ll base = dot(H[k], w);
+            // advance j on Q while next point gives smaller dot(Q[j], w)
+            auto f = [&](int idx){
+                return dot(Q[idx], w);
+            };
+            // j < q guaranteed because q>=1 (we know there is ≥1 interior pt)
+            while (q > 1) {
+                int jn = (j+1)%q;
+                if (f(jn) < f(j)) j = jn;
+                else break;
+            }
+            ll cur = f(j) - base;
+            if (cur < minDelta) minDelta = cur;
+        }
+        // Answer = 2*Area(H) - minDelta
+        // both are positive integers
+        ll ans = (ll)(A2 - minDelta);
+        cout << ans << "\n";
+    }
+    return 0;
+}
+
+
+//////---------Xor Hashing-------
+
+
+#include <chrono>
+#include <iostream>
+#include <map>
+#include <random>
+#include <set>
+#include <vector>
+
+using std::cout;
+using std::endl;
+using std::vector;
+
+/** @return a random integer between 0 and INT64_MAX */
+long long rng() {
+	static std::mt19937 gen(
+	    std::chrono::steady_clock::now().time_since_epoch().count());
+	return std::uniform_int_distribution<long long>(0, INT64_MAX)(gen);
+}
+
+int main() {
+	int len;
+	std::cin >> len;
+
+	std::map<int, long long> hash_vals;
+	vector<int> a(len);
+	for (int &i : a) {
+		std::cin >> i;
+		// assign a hash value to each unique number in the array
+		if (!hash_vals.count(i)) { hash_vals[i] = rng(); }
+	}
+	vector<int> b(len);
+	for (int &i : b) {
+		std::cin >> i;
+		if (!hash_vals.count(i)) { hash_vals[i] = rng(); }
+	}
+
+	std::set<int> seen;
+	vector<long long> a_xor(len);
+	for (int i = 0; i < len; i++) {
+		// only add to prefix xor if not encountered before
+		if (!seen.count(a[i])) {
+			a_xor[i] = hash_vals[a[i]];
+			seen.insert(a[i]);
+		}
+		if (i > 0) { a_xor[i] ^= a_xor[i - 1]; }
+	}
+
+	seen.clear();
+	// do the same thing for b
+	vector<long long> b_xor(len);
+	for (int i = 0; i < len; i++) {
+		if (!seen.count(b[i])) {
+			b_xor[i] = hash_vals[b[i]];
+			seen.insert(b[i]);
+		}
+		if (i > 0) { b_xor[i] ^= b_xor[i - 1]; }
+	}
+
+	int query_num;
+	std::cin >> query_num;
+	for (int q = 0; q < query_num; q++) {
+		int a_set, b_set;
+		std::cin >> a_set >> b_set;
+		// check if the prefix xors are equal
+		cout << (a_xor[--a_set] == b_xor[--b_set] ? "Yes" : "No") << '\n';
+	}
+}
+
+////----------LCA-------
+
+
+#include <bits/stdc++.h>
+using namespace std;
+ 
+#define print(arr, n) for(int i = 0; i < n; i++) cout << arr[i] << ' ';
+#define int long long
+#define fastio() ios_base::sync_with_stdio(false); cin.tie(NULL); cout.tie(NULL)
+#define dbg(x) cout << #x << " = " << x << "\n"
+ 
+const int MAXN = 2e5 + 5;
+const int M = 31;
+ 
+vector<vector<int>> up(MAXN, vector<int>(M, 0));
+vector<int> level(MAXN, 0);
+vector<int> g[MAXN]; // Correct size initialization
+void dfs(int node, int par, int lvl) {
+    up[node][0] = par;
+    level[node] = lvl;
+ 
+    for (auto child : g[node]) {
+        if (child == par) continue;
+        dfs(child, node, lvl + 1);
+    }
+}
+ 
+void preprocess() {
+    for (int j = 1; j < M; j++) {
+        for (int i = 1; i < MAXN; i++) {
+            int par = up[i][j - 1];
+            up[i][j] = up[par][j - 1];
+        }
+    }
+}
+ 
+int lift_node(int node, int k) {
+    while (k) {
+        int ii = log2(k);
+        node = up[node][ii];
+        k -= (1LL << ii);
+    }
+    return node;
+}
+ 
+int lca(int a, int b) {
+    if (level[a] < level[b]) swap(a, b);
+    a = lift_node(a, level[a] - level[b]);
+    if (a == b) return a;
+ 
+    for (int j = M - 1; j >= 0; j--) {
+        if (up[a][j] != up[b][j]) {
+            a = up[a][j];
+            b = up[b][j];
+        }
+    }
+    return up[a][0];
+}
+ 
+signed main(void) {
+    fastio();
+    int n, m;
+    cin >> n >> m;
+ 
+    for (int i = 2; i <= n; i++) {
+        int a, b;
+        cin >> a >> b;
+        g[b].push_back(a);
+        g[a].push_back(b);
+    }
+    dfs(1, 0, 0);
+    preprocess();
+ 
+    while (m--) {
+        int a, b;
+        cin >> a >> b;
+        int x = lca(a, b);
+        int ans = level[a] + level[b] - 2 * level[x];
+        cout << ans << '\n';
+    }
+    return 0;
+}
+
+
+/////---heavy light for max value in path--
+
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+ 
+vector<int> parent, depth, heavy, head, pos;
+int cur_pos;
+ 
+int dfs(int v, vector<vector<int>> const& adj) {
+    int size = 1;
+    int max_c_size = 0;
+    for (int c : adj[v]) {
+        if (c != parent[v]) {
+            parent[c] = v, depth[c] = depth[v] + 1;
+            int c_size = dfs(c, adj);
+            size += c_size;
+            if (c_size > max_c_size)
+                max_c_size = c_size, heavy[v] = c;
+        }
+    }
+    return size;
+}
+ 
+void decompose(int v, int h, vector<vector<int>> const& adj) {
+    head[v] = h, pos[v] = cur_pos++;
+    if (heavy[v] != -1)
+        decompose(heavy[v], h, adj);
+    for (int c : adj[v]) {
+        if (c != parent[v] && c != heavy[v])
+            decompose(c, c, adj);
+    }
+}
+ 
+void initofHLD(vector<vector<int>> const& adj) {
+    int n = adj.size();
+    parent = vector<int>(n);
+    depth = vector<int>(n);
+    heavy = vector<int>(n, -1);
+    head = vector<int>(n);
+    pos = vector<int>(n);
+    cur_pos = 0;
+ 
+    dfs(0, adj);
+    decompose(0, 0, adj);
+}
+ 
+vector<int> tree(400001), arr(100001);
+int arrtotree[300001];
+void init(int n)
+{
+    for (int i = 0; i < n; i++)
+        tree[n + i] = arr[i];
+ 
+    for (int i = n - 1; i >= 1; i--)
+        tree[i] = max(tree[2 * i], tree[2 * i + 1]);
+}
+ 
+void update(int pos, int value, int n)
+{
+    pos += n;
+    tree[pos] = value;
+ 
+    while (pos > 1) {
+        pos >>= 1;
+        tree[pos] = max(tree[2 * pos], tree[2 * pos + 1]);
+    }
+}
+ 
+int segquery(int left, int right, int n)
+{
+    left += n;
+    right += n + 1; // inclusive range
+    int mi = (int)-1;
+ 
+    while (left < right) {
+        if (left & 1) {
+            mi = max(mi, tree[left]);
+            left++;
+        }
+        if (right & 1) {
+            right--;
+            mi = max(mi, tree[right]);
+        }
+        left >>= 1;
+        right >>= 1;
+    }
+    return mi;
+}
+ 
+int query(int a, int b, int n) {
+    int res = 0;
+    while (head[a] != head[b]) {
+        if (depth[head[a]] > depth[head[b]]) swap(a, b);
+        res = max(res, segquery(pos[head[b]], pos[b], n));
+        b = parent[head[b]];
+    }
+    if (depth[a] > depth[b]) swap(a, b);
+    res = max(res, segquery(pos[a], pos[b], n));
+    return res;
+}
+ 
+void do_the_honour() {
+    int n, q;
+    cin >> n >> q;
+    vector<int> a(n);
+    for (int i = 0; i < n; ++i) cin >> a[i];
+ 
+    vector<vector<int>> adj(n);
+    for (int i = 1; i < n; ++i) {
+        int x, y;
+        cin >> x >> y;
+        --x; --y;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
+    }
+    initofHLD(adj);
+ 
+    arr.resize(n);
+    tree.resize(4 * n);
+    for (int i = 0; i < n; ++i) arr[pos[i]] = a[i];
+    init(n);
+ 
+    while (q--) {
+        int type;
+        cin >> type;
+        if (type == 2) {
+            int l, r;
+            cin >> l >> r;
+            cout << query(l - 1, r - 1, n) << ' ';
+        } else {
+            int s, x;
+            cin >> s >> x;
+            s--;
+            update(pos[s], x, n);
+        }
+    }
+    cout << '\n';
+}
+ 
+int32_t main() {
+    optimize();
+    int t = 1;
+    // cin >> t;
+    while (t--) {
+        do_the_honour();
+    }
+    return 0;
+
+}
+
+////-------HLD On edges  u to v weighted sum--
+
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct SegTree {
+    int SZ;
+    vector<int> st;
+    static const int NEG = INT_MIN; // for max
+
+    void init(int n) {
+        SZ = 1;
+        while (SZ < n) SZ <<= 1;
+        st.assign(2 * SZ, NEG);
+    }
+    void build(const vector<int>& base) {
+        int n = (int)base.size();
+        for (int i = 0; i < n; ++i) st[SZ + i] = base[i];
+        for (int i = SZ - 1; i >= 1; --i) st[i] = max(st[i << 1], st[i << 1 | 1]);
+    }
+    void update(int p, int val) {
+        int i = p + SZ;
+        st[i] = val;
+        for (i >>= 1; i >= 1; i >>= 1) st[i] = max(st[i << 1], st[i << 1 | 1]);
+    }
+    int query(int l, int r) { // inclusive
+        if (l > r) return NEG;
+        int res = NEG;
+        l += SZ; r += SZ;
+        while (l <= r) {
+            if (l & 1) res = max(res, st[l++]);
+            if (!(r & 1)) res = max(res, st[r--]);
+            l >>= 1; r >>= 1;
+        }
+        return res;
+    }
+};
+
+const int MAXN = 10005;
+
+int n;
+vector<pair<int,int>> adj[MAXN]; // (to, edgeId)
+int parent_[MAXN], depth_[MAXN], heavy[MAXN], head[MAXN], pos[MAXN], sz[MAXN];
+int wToPar[MAXN];            // weight of edge (u, parent[u]); 0 for root
+int edgeU[MAXN], edgeV[MAXN], edgeW[MAXN]; // input edges 1..n-1
+int edgeNode[MAXN];          // for edge i, which node (deeper endpoint) it maps to
+int curPos;
+
+int dfs(int u, int p) {
+    parent_[u] = p;
+    sz[u] = 1;
+    int maxSize = 0;
+    heavy[u] = -1;
+    for (auto [v, id] : adj[u]) if (v != p) {
+        depth_[v] = depth_[u] + 1;
+        // set weight to parent when we go down this tree edge
+        wToPar[v] = edgeW[id];
+        int csz = dfs(v, u);
+        if (csz > maxSize) maxSize = csz, heavy[u] = v;
+        sz[u] += csz;
+    }
+    return sz[u];
+}
+
+void decompose(int u, int h) {
+    head[u] = h;
+    pos[u] = curPos++;
+    if (heavy[u] != -1) decompose(heavy[u], h);
+    for (auto [v, id] : adj[u]) {
+        if (v != parent_[u] && v != heavy[u]) decompose(v, v);
+    }
+}
+
+SegTree seg;
+
+int queryPath(int u, int v) {
+    int res = SegTree::NEG;
+    while (head[u] != head[v]) {
+        if (depth_[head[u]] < depth_[head[v]]) swap(u, v);
+        // head[u]..u is a top segment; it includes head[u]
+        res = max(res, seg.query(pos[head[u]], pos[u]));
+        u = parent_[head[u]];
+    }
+    // same head; ensure u is deeper
+    if (depth_[u] < depth_[v]) swap(u, v);
+    // exclude LCA node's position because edges live on child nodes
+    // range is (pos[v]+1 .. pos[u])
+    res = max(res, seg.query(pos[v] + 1, pos[u]));
+    return res;
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int T; 
+    if (!(cin >> T)) return 0;
+    while (T--) {
+        // blank line may exist; input format tolerates it
+        cin >> n;
+        for (int i = 1; i <= n; ++i) {
+            adj[i].clear();
+            parent_[i] = depth_[i] = sz[i] = wToPar[i] = 0;
+            heavy[i] = -1;
+        }
+
+        for (int i = 1; i <= n - 1; ++i) {
+            int a, b, c; 
+            cin >> a >> b >> c;
+            edgeU[i] = a; edgeV[i] = b; edgeW[i] = c;
+            adj[a].push_back({b, i});
+            adj[b].push_back({a, i});
+        }
+
+        // Root the tree at 1
+        depth_[1] = 0; wToPar[1] = 0;
+        dfs(1, 0);
+
+        // Determine which node each edge maps to (the deeper endpoint)
+        for (int i = 1; i <= n - 1; ++i) {
+            int u = edgeU[i], v = edgeV[i];
+            edgeNode[i] = (depth_[u] > depth_[v] ? u : v);
+        }
+
+        curPos = 0;
+        decompose(1, 1);
+
+        // Build base array where base[pos[u]] = weight of edge (u,parent[u])
+        // The root's slot has NEG so it never affects max
+        vector<int> base(n, SegTree::NEG);
+        for (int u = 1; u <= n; ++u) {
+            int w = (u == 1 ? SegTree::NEG : wToPar[u]);
+            base[pos[u]] = w;
+        }
+
+        seg.init(n);
+        seg.build(base);
+
+        // Commands until DONE
+        string cmd;
+        while (cin >> cmd && cmd != "DONE") {
+            if (cmd == "QUERY") {
+                int a, b; cin >> a >> b;
+                int ans = queryPath(a, b);
+                cout << ans << "\n";
+            } else if (cmd == "CHANGE") {
+                int i, t; cin >> i >> t;
+                int node = edgeNode[i]; // deeper endpoint
+                seg.update(pos[node], t);
+            }
+        }
+    }
+    return 0;
+}
+
+///////-----HLD For max,min,sum with range update----
+
+
+// ========================= HLD + Lazy SegTree Template =========================
+// Supports range add, range set, path sum/min/max.
+// Both node-based and edge-based path operations are provided.
+// Nodes are 1-indexed in the public API.
+//
+// Usage example is at the bottom of this file.
+// ===============================================================================
+#include <bits/stdc++.h>
+using namespace std;
+
+struct LazySeg {
+    struct Node {
+        long long sum = 0;          // segment sum
+        long long mn  = LLONG_MAX;  // segment min
+        long long mx  = LLONG_MIN;  // segment max
+        int len = 0;                // segment length
+        long long add = 0;          // pending +v
+        long long setv = 0;         // pending =x
+        bool has_set = false;       // is set pending?
+    };
+
+    int SZ = 0;               // power-of-two base size
+    vector<Node> st;          // segment tree
+
+    static Node merge(const Node& a, const Node& b) {
+        Node c;
+        c.len = a.len + b.len;
+        c.sum = a.sum + b.sum;
+        c.mn  = min(a.mn, b.mn);
+        c.mx  = max(a.mx, b.mx);
+        return c;
+    }
+
+    void init(int n) {
+        SZ = 1; while (SZ < n) SZ <<= 1;
+        st.assign(2 * SZ, Node());
+        // set leaf lengths
+        for (int i = SZ; i < SZ + SZ; ++i) st[i].len = 1;
+        // set internal lengths
+        for (int i = SZ - 1; i >= 1; --i) st[i].len = st[i<<1].len + st[i<<1|1].len;
+    }
+
+    void build(const vector<long long>& base) { // base is size n (0-indexed)
+        int n = (int)base.size();
+        init(n);
+        for (int i = 0; i < n; ++i) {
+            auto &x = st[SZ + i];
+            x.sum = base[i];
+            x.mn  = base[i];
+            x.mx  = base[i];
+        }
+        for (int i = SZ - 1; i >= 1; --i) st[i] = merge(st[i<<1], st[i<<1|1]);
+    }
+
+    inline void apply_set(int p, long long x) {
+        Node &a = st[p];
+        a.has_set = true;
+        a.setv = x;
+        a.add = 0;
+        a.sum = x * a.len;
+        a.mn  = x;
+        a.mx  = x;
+    }
+    inline void apply_add(int p, long long v) {
+        Node &a = st[p];
+        if (a.has_set) {
+            a.setv += v;
+            a.sum = a.setv * a.len;
+            a.mn  = a.setv;
+            a.mx  = a.setv;
+        } else {
+            a.add += v;
+            a.sum += v * a.len;
+            if (a.mn != LLONG_MAX) a.mn += v;
+            if (a.mx != LLONG_MIN) a.mx += v;
+        }
+    }
+    inline void push(int p) {
+        if (p >= SZ) return;
+        if (st[p].has_set) {
+            apply_set(p<<1,   st[p].setv);
+            apply_set(p<<1|1, st[p].setv);
+            st[p].has_set = false;
+        }
+        if (st[p].add != 0) {
+            apply_add(p<<1,   st[p].add);
+            apply_add(p<<1|1, st[p].add);
+            st[p].add = 0;
+        }
+    }
+    inline void pull(int p) { st[p] = merge(st[p<<1], st[p<<1|1]); }
+
+    // internal recursive ops on [L,R], query/update on [l,r]
+    void range_set(int p, int L, int R, int l, int r, long long x) {
+        if (l > R || r < L) return;
+        if (l <= L && R <= r) { apply_set(p, x); return; }
+        push(p);
+        int M = (L + R) >> 1;
+        range_set(p<<1, L, M, l, r, x);
+        range_set(p<<1|1, M+1, R, l, r, x);
+        pull(p);
+    }
+    void range_add(int p, int L, int R, int l, int r, long long v) {
+        if (l > R || r < L) return;
+        if (l <= L && R <= r) { apply_add(p, v); return; }
+        push(p);
+        int M = (L + R) >> 1;
+        range_add(p<<1, L, M, l, r, v);
+        range_add(p<<1|1, M+1, R, l, r, v);
+        pull(p);
+    }
+    long long range_sum(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return 0;
+        if (l <= L && R <= r) return st[p].sum;
+        push(p);
+        int M = (L + R) >> 1;
+        return range_sum(p<<1, L, M, l, r) + range_sum(p<<1|1, M+1, R, l, r);
+    }
+    long long range_min(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return LLONG_MAX;
+        if (l <= L && R <= r) return st[p].mn;
+        push(p);
+        int M = (L + R) >> 1;
+        return min(range_min(p<<1, L, M, l, r), range_min(p<<1|1, M+1, R, l, r));
+    }
+    long long range_max(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return LLONG_MIN;
+        if (l <= L && R <= r) return st[p].mx;
+        push(p);
+        int M = (L + R) >> 1;
+        return max(range_max(p<<1, L, M, l, r), range_max(p<<1|1, M+1, R, l, r));
+    }
+
+    // public wrappers: l,r are 0-indexed inclusive
+    inline void range_set(int l, int r, long long x) { if (l <= r) range_set(1, 0, SZ-1, l, r, x); }
+    inline void range_add(int l, int r, long long v) { if (l <= r) range_add(1, 0, SZ-1, l, r, v); }
+    inline long long range_sum(int l, int r) { return (l<=r) ? range_sum(1, 0, SZ-1, l, r) : 0; }
+    inline long long range_min(int l, int r) { return (l<=r) ? range_min(1, 0, SZ-1, l, r) : LLONG_MAX; }
+    inline long long range_max(int l, int r) { return (l<=r) ? range_max(1, 0, SZ-1, l, r) : LLONG_MIN; }
+};
+
+struct HLD {
+    int n;
+    vector<vector<int>> g;          // adjacency (unweighted for structure)
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos;
+
+    // For edge-based mapping
+    struct Edge { int u, v; long long w; };
+    vector<Edge> edges;             // edges[1..m] if needed
+    vector<int> edge_to_node;       // map edge index -> deeper endpoint node
+
+    LazySeg seg;
+
+    HLD(int n_=0): n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+        edges.clear();
+        edge_to_node.clear();
+        // edges[0] unused to keep 1-index for convenience
+        edges.push_back({0,0,0});
+    }
+
+    void add_edge(int u, int v, long long w = 0) {
+        g[u].push_back(v);
+        g[v].push_back(u);
+        edges.push_back({u,v,w});
+    }
+
+    int dfs(int u, int p) {
+        parent[u] = p;
+        sz[u] = 1;
+        int max_sz = 0;
+        heavy[u] = -1;
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            int s = dfs(v, u);
+            sz[u] += s;
+            if (s > max_sz) max_sz = s, heavy[u] = v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u, int h) {
+        head[u] = h;
+        pos[u] = cur_pos++;
+        if (heavy[u] != -1) decompose(heavy[u], h);
+        for (int v : g[u]) if (v != parent[u] && v != heavy[u]) decompose(v, v);
+    }
+
+    // Build HLD and segtree base. If you use edge-based values, pass edge_values=true.
+    // Provide node_values of size n+1 (1..n) when node-based.
+    // Provide edge weights already stored in edges[].w when edge-based.
+    void build(int root = 1, bool edge_values = false,
+               const vector<long long>* node_values = nullptr)
+    {
+        depth[root] = 0;
+        dfs(root, 0);
+        cur_pos = 0;
+        decompose(root, root);
+
+        vector<long long> base(n, 0); // 0-indexed by pos
+
+        if (edge_values) {
+            edge_to_node.assign((int)edges.size(), 0);
+            for (int i = 1; i < (int)edges.size(); ++i) {
+                int u = edges[i].u, v = edges[i].v;
+                int child = (parent[u] == v ? u : (parent[v] == u ? v : (depth[u] > depth[v] ? u : v)));
+                edge_to_node[i] = child;
+                base[pos[child]] = edges[i].w; // store on deeper endpoint
+            }
+        } else {
+            // node-based: node_values required (1..n)
+            if (!node_values) {
+                // default zeros if not provided
+            } else {
+                for (int u = 1; u <= n; ++u) base[pos[u]] = (*node_values)[u];
+            }
+        }
+        seg.build(base); // builds lazy segment tree
+    }
+
+    // ------------------- path operations (NODE-BASED) -------------------
+    void path_add_nodes(int u, int v, long long val) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_add(pos[head[u]], pos[u], val);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        seg.range_add(pos[u], pos[v], val);
+    }
+
+    void path_set_nodes(int u, int v, long long x) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_set(pos[head[u]], pos[u], x);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        seg.range_set(pos[u], pos[v], x);
+    }
+
+    long long path_sum_nodes(int u, int v) {
+        long long res = 0;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res += seg.range_sum(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        res += seg.range_sum(pos[u], pos[v]);
+        return res;
+    }
+
+    long long path_max_nodes(int u, int v) {
+        long long res = LLONG_MIN;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res = max(res, seg.range_max(pos[head[u]], pos[u]));
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        res = max(res, seg.range_max(pos[u], pos[v]));
+        return res;
+    }
+
+    long long path_min_nodes(int u, int v) {
+        long long res = LLONG_MAX;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res = min(res, seg.range_min(pos[head[u]], pos[u]));
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        res = min(res, seg.range_min(pos[u], pos[v]));
+        return res;
+    }
+
+    // ------------------- path operations (EDGE-BASED) -------------------
+    // Values sit on deeper endpoint → exclude LCA position on the last segment.
+    void path_add_edges(int u, int v, long long val) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_add(pos[head[u]], pos[u], val);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v); // u deeper
+        if (pos[v] + 1 <= pos[u]) seg.range_add(pos[v] + 1, pos[u], val);
+    }
+
+    void path_set_edges(int u, int v, long long x) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_set(pos[head[u]], pos[u], x);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) seg.range_set(pos[v] + 1, pos[u], x);
+    }
+
+    long long path_sum_edges(int u, int v) {
+        long long res = 0;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res += seg.range_sum(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res += seg.range_sum(pos[v] + 1, pos[u]);
+        return res;
+    }
+
+    long long path_max_edges(int u, int v) {
+        long long res = LLONG_MIN;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res = max(res, seg.range_max(pos[head[u]], pos[u]));
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res = max(res, seg.range_max(pos[v] + 1, pos[u]));
+        return (res == LLONG_MIN ? 0 : res); // path of length 0 → 0
+    }
+
+    long long path_min_edges(int u, int v) {
+        long long res = LLONG_MAX;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res = min(res, seg.range_min(pos[head[u]], pos[u]));
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res = min(res, seg.range_min(pos[v] + 1, pos[u]));
+        return (res == LLONG_MAX ? 0 : res);
+    }
+
+    // Optional: single-edge point updates by index (for compatibility with "CHANGE i x")
+    void edge_set_by_index(int idx, long long x) {
+        int node = edge_to_node[idx];
+        seg.range_set(pos[node], pos[node], x);
+    }
+    void edge_add_by_index(int idx, long long v) {
+        int node = edge_to_node[idx];
+        seg.range_add(pos[node], pos[node], v);
+    }
+};
+
+// ---------------------------- Minimal Usage Example ----------------------------
+// Build from edges and do some edge-based & node-based operations.
+// Remove main() in your judge solution and call HLD as a library.
+
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n = 7;
+    HLD hld(n);
+
+    // tree edges (u,v,w) 1-indexed
+    hld.add_edge(1,2,5);
+    hld.add_edge(1,3,2);
+    hld.add_edge(2,4,7);
+    hld.add_edge(2,5,1);
+    hld.add_edge(3,6,3);
+    hld.add_edge(3,7,4);
+
+    // Build with edge values (edge-based ops)
+    hld.build(/*root=*/1, /*edge_values=*/true);
+
+    // Edge-based: sum/max/min on path 4..7 (edges on deeper endpoints)
+    cout << hld.path_sum_edges(4,7) << "\n";
+    cout << hld.path_max_edges(4,7) << "\n";
+    cout << hld.path_min_edges(4,7) << "\n";
+
+    // Add +10 to every edge on path 4..7
+    hld.path_add_edges(4,7,10);
+    cout << hld.path_sum_edges(4,7) << "\n";
+
+    // Set every edge on path 2..5 to 100
+    hld.path_set_edges(2,5,100);
+    cout << hld.path_max_edges(1,5) << "\n";
+
+    // Node-based example (rebuild with node values)
+    vector<long long> node_val(n+1, 0);
+    for (int i = 1; i <= n; ++i) node_val[i] = i; // node i has value i
+    HLD hld2(n);
+    // must add the same edges structurally; node values go via build()
+    hld2.add_edge(1,2); hld2.add_edge(1,3);
+    hld2.add_edge(2,4); hld2.add_edge(2,5);
+    hld2.add_edge(3,6); hld2.add_edge(3,7);
+    hld2.build(1, /*edge_values=*/false, &node_val);
+
+    cout << hld2.path_sum_nodes(4,7) << "\n"; // sum of node values on path 4..7
+    hld2.path_add_nodes(1,7,5);
+    cout << hld2.path_min_nodes(1,7) << "\n";
+    hld2.path_set_nodes(3,6,42);
+    cout << hld2.path_max_nodes(1,7) << "\n";
+    return 0;
+}
+
+
+// ==================== HLD + Lazy SegTree for AND/OR/XOR =====================
+// Supports path range SET (=x), path range XOR (⊕=mask), and path queries:
+//   AND, OR, XOR
+//
+// Works for both node- and edge-based values (edge value lives on deeper node).
+// Nodes are 1-indexed in the public API.
+// ============================================================================
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct BitwiseSeg {
+    struct Node {
+        long long ANDv = ~0LL;   // bitwise AND over the segment
+        long long ORv  = 0LL;    // bitwise OR over the segment
+        long long XORv = 0LL;    // bitwise XOR over the segment
+        int len = 0;             // number of elements in segment
+
+        // Lazy tags
+        bool has_set = false;    // pending =x ?
+        long long setv = 0;      // value to set
+        long long xorm = 0;      // pending XOR mask
+    };
+
+    int SZ = 0;
+    vector<Node> st;
+
+    static Node merge(const Node& a, const Node& b) {
+        Node c;
+        c.len  = a.len + b.len;
+        c.ANDv = a.ANDv & b.ANDv;
+        c.ORv  = a.ORv  | b.ORv;
+        c.XORv = a.XORv ^ b.XORv;
+        return c;
+    }
+
+    void init(int n) {
+        SZ = 1; while (SZ < n) SZ <<= 1;
+        st.assign(2*SZ, Node());
+        // set leaf lengths
+        for (int i = SZ; i < SZ + SZ; ++i) st[i].len = 1;
+        // set internal lengths
+        for (int i = SZ - 1; i >= 1; --i) st[i].len = st[i<<1].len + st[i<<1|1].len;
+    }
+
+    void build(const vector<long long>& base) { // base size n (0-indexed)
+        int n = (int)base.size();
+        init(n);
+        for (int i = 0; i < n; ++i) {
+            auto &x = st[SZ + i];
+            long long v = base[i];
+            x.ANDv = v;
+            x.ORv  = v;
+            x.XORv = (x.len & 1) ? v : 0LL; // XOR of [v] repeated len=1 is v
+        }
+        for (int i = SZ - 1; i >= 1; --i) st[i] = merge(st[i<<1], st[i<<1|1]);
+    }
+
+    inline void apply_set(int p, long long x) {
+        Node &a = st[p];
+        a.has_set = true;
+        a.setv = x;
+        a.xorm = 0; // set overrides pending xor
+
+        a.ANDv = x;
+        a.ORv  = x;
+        a.XORv = (a.len & 1) ? x : 0LL;
+    }
+
+    // Applying XOR to every value in the segment can update aggregates using only
+    // (AND, OR, XOR, len) as follows (per bit):
+    // newAND = (oldAND & ~mask) | ((~oldOR) & mask)
+    // newOR  = (oldOR  & ~mask) | ((~oldAND) & mask)
+    // newXOR = oldXOR ^ ( (len%2 ? mask : 0) )
+    inline void apply_xor(int p, long long m) {
+        Node &a = st[p];
+
+        // If there is a pending set on this segment, it becomes setv ^= m
+        if (a.has_set) {
+            a.setv ^= m;
+        } else {
+            a.xorm ^= m;
+        }
+
+        long long oldAND = a.ANDv;
+        long long oldOR  = a.ORv;
+
+        a.ANDv = (oldAND & ~m) | ((~oldOR) & m);
+        a.ORv  = (oldOR  & ~m) | ((~oldAND) & m);
+        if (a.len & 1) a.XORv ^= m; // XOR of all elements toggles by m if len is odd
+        // (if len even, XOR over the segment remains unchanged under per-element xor)
+    }
+
+    inline void push(int p) {
+        if (p >= SZ) return;
+        if (st[p].has_set) {
+            apply_set(p<<1,   st[p].setv);
+            apply_set(p<<1|1, st[p].setv);
+            st[p].has_set = false;
+        }
+        if (st[p].xorm) {
+            apply_xor(p<<1,   st[p].xorm);
+            apply_xor(p<<1|1, st[p].xorm);
+            st[p].xorm = 0;
+        }
+    }
+    inline void pull(int p) { st[p] = merge(st[p<<1], st[p<<1|1]); }
+
+    // internal ops on [L,R], query/update on [l,r]
+    void range_set(int p, int L, int R, int l, int r, long long x) {
+        if (l > R || r < L) return;
+        if (l <= L && R <= r) { apply_set(p, x); return; }
+        push(p);
+        int M = (L + R) >> 1;
+        range_set(p<<1, L, M, l, r, x);
+        range_set(p<<1|1, M+1, R, l, r, x);
+        pull(p);
+    }
+    void range_xor(int p, int L, int R, int l, int r, long long m) {
+        if (l > R || r < L) return;
+        if (l <= L && R <= r) { apply_xor(p, m); return; }
+        push(p);
+        int M = (L + R) >> 1;
+        range_xor(p<<1, L, M, l, r, m);
+        range_xor(p<<1|1, M+1, R, l, r, m);
+        pull(p);
+    }
+    long long range_and(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return ~0LL;
+        if (l <= L && R <= r) return st[p].ANDv;
+        push(p);
+        int M = (L + R) >> 1;
+        return range_and(p<<1, L, M, l, r) & range_and(p<<1|1, M+1, R, l, r);
+    }
+    long long range_or(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return 0LL;
+        if (l <= L && R <= r) return st[p].ORv;
+        push(p);
+        int M = (L + R) >> 1;
+        return range_or(p<<1, L, M, l, r) | range_or(p<<1|1, M+1, R, l, r);
+    }
+    long long range_xor_q(int p, int L, int R, int l, int r) {
+        if (l > R || r < L) return 0LL;
+        if (l <= L && R <= r) return st[p].XORv;
+        push(p);
+        int M = (L + R) >> 1;
+        return range_xor_q(p<<1, L, M, l, r) ^ range_xor_q(p<<1|1, M+1, R, l, r);
+    }
+
+    // public wrappers: l,r are 0-indexed inclusive
+    inline void range_set(int l, int r, long long x) { if (l <= r) range_set(1, 0, SZ-1, l, r, x); }
+    inline void range_xor(int l, int r, long long m) { if (l <= r) range_xor(1, 0, SZ-1, l, r, m); }
+    inline long long range_and(int l, int r) { return (l<=r) ? range_and(1, 0, SZ-1, l, r) : ~0LL; }
+    inline long long range_or (int l, int r) { return (l<=r) ? range_or (1, 0, SZ-1, l, r) : 0LL; }
+    inline long long range_xor_q(int l, int r) { return (l<=r) ? range_xor_q(1, 0, SZ-1, l, r) : 0LL; }
+};
+
+struct HLD {
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos;
+
+    struct Edge { int u, v; long long w; };
+    vector<Edge> edges;
+    vector<int> edge_to_node;
+
+    BitwiseSeg seg;
+
+    HLD(int n_=0): n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+        edges.clear();
+        edge_to_node.clear();
+        edges.push_back({0,0,0});
+    }
+
+    void add_edge(int u, int v, long long w = 0) {
+        g[u].push_back(v);
+        g[v].push_back(u);
+        edges.push_back({u,v,w});
+    }
+
+    int dfs(int u, int p) {
+        parent[u] = p;
+        sz[u] = 1;
+        int max_sz = 0;
+        heavy[u] = -1;
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            int s = dfs(v, u);
+            sz[u] += s;
+            if (s > max_sz) max_sz = s, heavy[u] = v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u, int h) {
+        head[u] = h;
+        pos[u] = cur_pos++;
+        if (heavy[u] != -1) decompose(heavy[u], h);
+        for (int v : g[u]) if (v != parent[u] && v != heavy[u]) decompose(v, v);
+    }
+
+    // Build with node or edge values.
+    void build(int root = 1, bool edge_values = false,
+               const vector<long long>* node_values = nullptr)
+    {
+        depth[root] = 0;
+        dfs(root, 0);
+        cur_pos = 0;
+        decompose(root, root);
+
+        vector<long long> base(n, 0); // 0-indexed by pos
+
+        if (edge_values) {
+            edge_to_node.assign((int)edges.size(), 0);
+            for (int i = 1; i < (int)edges.size(); ++i) {
+                int u = edges[i].u, v = edges[i].v;
+                int child = (parent[u] == v ? u : (parent[v] == u ? v : (depth[u] > depth[v] ? u : v)));
+                edge_to_node[i] = child;
+                base[pos[child]] = edges[i].w; // place weight on deeper endpoint
+            }
+        } else {
+            if (node_values) {
+                for (int u = 1; u <= n; ++u) base[pos[u]] = (*node_values)[u];
+            } // else defaults to zeros
+        }
+        seg.build(base);
+    }
+
+    // ------------------- NODE-BASED path updates/queries -------------------
+    void path_set_nodes(int u, int v, long long x) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_set(pos[head[u]], pos[u], x);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        seg.range_set(pos[u], pos[v], x);
+    }
+    void path_xor_nodes(int u, int v, long long m) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_xor(pos[head[u]], pos[u], m);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        seg.range_xor(pos[u], pos[v], m);
+    }
+    long long path_and_nodes(int u, int v) {
+        long long resAND = ~0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            resAND &= seg.range_and(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        resAND &= seg.range_and(pos[u], pos[v]);
+        return resAND;
+    }
+    long long path_or_nodes(int u, int v) {
+        long long resOR = 0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            resOR |= seg.range_or(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        resOR |= seg.range_or(pos[u], pos[v]);
+        return resOR;
+    }
+    long long path_xor_nodes_q(int u, int v) {
+        long long resX = 0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            resX ^= seg.range_xor_q(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        resX ^= seg.range_xor_q(pos[u], pos[v]);
+        return resX;
+    }
+
+    // ------------------- EDGE-BASED path updates/queries -------------------
+    // Values sit on deeper endpoint → exclude LCA node.
+    void path_set_edges(int u, int v, long long x) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_set(pos[head[u]], pos[u], x);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) seg.range_set(pos[v] + 1, pos[u], x);
+    }
+    void path_xor_edges(int u, int v, long long m) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            seg.range_xor(pos[head[u]], pos[u], m);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) seg.range_xor(pos[v] + 1, pos[u], m);
+    }
+    long long path_and_edges(int u, int v) {
+        long long res = ~0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res &= seg.range_and(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res &= seg.range_and(pos[v] + 1, pos[u]);
+        return res;
+    }
+    long long path_or_edges(int u, int v) {
+        long long res = 0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res |= seg.range_or(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res |= seg.range_or(pos[v] + 1, pos[u]);
+        return res;
+    }
+    long long path_xor_edges_q(int u, int v) {
+        long long res = 0LL;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            res ^= seg.range_xor_q(pos[head[u]], pos[u]);
+            u = parent[head[u]];
+        }
+        if (depth[u] < depth[v]) swap(u, v);
+        if (pos[v] + 1 <= pos[u]) res ^= seg.range_xor_q(pos[v] + 1, pos[u]);
+        return res;
+    }
+
+    // Optional: single-edge point updates by index (for "CHANGE i x" style)
+    void edge_set_by_index(int idx, long long x) {
+        int node = edge_to_node[idx];
+        seg.range_set(pos[node], pos[node], x);
+    }
+    void edge_xor_by_index(int idx, long long m) {
+        int node = edge_to_node[idx];
+        seg.range_xor(pos[node], pos[node], m);
+    }
+};
+
+// ---------------------------- Minimal Usage Example ----------------------------
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n = 7;
+    HLD hld(n);
+
+    // tree edges (u, v, w) 1-indexed
+    hld.add_edge(1,2,5);
+    hld.add_edge(1,3,2);
+    hld.add_edge(2,4,7);
+    hld.add_edge(2,5,1);
+    hld.add_edge(3,6,3);
+    hld.add_edge(3,7,4);
+
+    // ========== EDGE-BASED build and ops (weights on edges) ==========
+    hld.build(/*root=*/1, /*edge_values=*/true);
+
+    // Query AND/OR/XOR on the path 4..7 over edge weights
+    cout << hld.path_and_edges(4,7) << "\n"; // AND along edges 4..7
+    cout << hld.path_or_edges(4,7)  << "\n"; // OR along edges 4..7
+    cout << hld.path_xor_edges_q(4,7) << "\n"; // XOR along edges 4..7
+
+    // XOR every edge on path 4..7 with mask 10 (binary 1010)
+    hld.path_xor_edges(4,7,10);
+    cout << hld.path_xor_edges_q(4,7) << "\n";
+
+    // Set every edge on path 2..5 to 100
+    hld.path_set_edges(2,5,100);
+    cout << hld.path_or_edges(1,5) << "\n"; // OR from 1..5 (edges)
+
+    // ========== NODE-BASED build and ops (values on nodes) ==========
+    vector<long long> node_val(n+1, 0);
+    for (int i = 1; i <= n; ++i) node_val[i] = i; // node i has value i
+
+    HLD hld2(n);
+    hld2.add_edge(1,2); hld2.add_edge(1,3);
+    hld2.add_edge(2,4); hld2.add_edge(2,5);
+    hld2.add_edge(3,6); hld2.add_edge(3,7);
+    hld2.build(1, /*edge_values=*/false, &node_val);
+
+    // Node-based path queries/updates
+    cout << hld2.path_and_nodes(4,7) << "\n"; // AND of node values on path 4..7
+    hld2.path_xor_nodes(1,7,5);               // XOR mask 5 on path 1..7 (nodes)
+    cout << hld2.path_xor_nodes_q(1,7) << "\n";
+    hld2.path_set_nodes(3,6,42);              // set nodes on path 3..6 to 42
+    cout << hld2.path_or_nodes(1,7) << "\n";
+    return 0;
+}
+
+
+
+///---pallindrom checks on paths----
+
+
+// ====================== HLD + Double Hash Palindrome on Paths ======================
+// Operations:
+//   - Update: set node u to character c
+//   - Query: is the path string (u..v) a palindrome?
+//
+// Idea:
+//   Path hash(u->v) = concatenate up-segments (read bottom->top) + down-segments (read top->bottom).
+//   For reverse, just compute path hash(v->u) the same way.
+//   Palindrome iff hash(u->v) == hash(v->u) under both moduli.
+//
+// Implementation details:
+//   - Heavy-Light Decomposition for path splitting.
+//   - Single segment tree over HLD positions.
+//   - Each segtree node stores both forward hash (l->r in pos-order) and reverse hash (r->l).
+//   - Double hashing with two moduli.
+//   - Characters mapped as 1..26 (assumes lowercase 'a'..'z'; easy to adjust).
+//
+// I/O demo in main():
+//   - Reads N, strings s[1..N], edges, then Q queries:
+//     * "U u c"           (update node u to char c)
+//     * "Q u v"           (print YES/NO if palindrome on path u..v)
+//
+// ===============================================================================
+#include <bits/stdc++.h>
+using namespace std;
+
+// -------------------- Double Hash constants --------------------
+struct DH {
+    uint32_t a, b; // store modded values
+    int len;
+};
+
+static const uint32_t MOD1 = 1000000007u;
+static const uint32_t MOD2 = 1000000009u;
+// Bases can be large; they're reduced mod each MOD automatically in mul.
+static const uint64_t BASE1 = 911382323ull;
+static const uint64_t BASE2 = 972663749ull;
+
+struct PowTab {
+    vector<uint32_t> p1, p2; // base^i % MOD
+    void init(int n) {
+        p1.resize(n+1); p2.resize(n+1);
+        p1[0] = 1; p2[0] = 1;
+        for (int i = 1; i <= n; ++i) {
+            p1[i] = (uint64_t)p1[i-1] * (BASE1 % MOD1) % MOD1;
+            p2[i] = (uint64_t)p2[i-1] * (BASE2 % MOD2) % MOD2;
+        }
+    }
+    inline uint32_t pow1(int e) const { return p1[e]; }
+    inline uint32_t pow2(int e) const { return p2[e]; }
+} P;
+
+// Combine two blocks: H = A || B (A followed by B)
+static inline DH concat(const DH& A, const DH& B) {
+    DH C;
+    C.len = A.len + B.len;
+    C.a = ( (uint64_t)A.a * P.pow1(B.len) + B.a ) % MOD1;
+    C.b = ( (uint64_t)A.b * P.pow2(B.len) + B.b ) % MOD2;
+    return C;
+}
+static inline bool equal_hash(const DH& A, const DH& B) {
+    return A.a == B.a && A.b == B.b && A.len == B.len;
+}
+static inline DH dh_from_value(uint32_t val) { // single char
+    return DH{val % MOD1, val % MOD2, 1};
+}
+static inline DH dh_zero() { return DH{0u, 0u, 0}; }
+
+// -------------------- Segment Tree (forward + reverse hash) --------------------
+struct SegTree {
+    struct Node {
+        uint32_t f1=0, f2=0; // forward hash (l->r)
+        uint32_t r1=0, r2=0; // reverse hash (r->l)
+        int len=0;
+    };
+    int SZ=0;
+    vector<Node> st;
+
+    static Node merge(const Node &L, const Node &R) {
+        Node C;
+        C.len = L.len + R.len;
+        // forward: L || R
+        C.f1 = ( (uint64_t)L.f1 * P.pow1(R.len) + R.f1 ) % MOD1;
+        C.f2 = ( (uint64_t)L.f2 * P.pow2(R.len) + R.f2 ) % MOD2;
+        // reverse: R || L  (since reverse reading is right->left)
+        C.r1 = ( (uint64_t)R.r1 * P.pow1(L.len) + L.r1 ) % MOD1;
+        C.r2 = ( (uint64_t)R.r2 * P.pow2(L.len) + L.r2 ) % MOD2;
+        return C;
+    }
+
+    void init(int n) {
+        SZ = 1; while (SZ < n) SZ <<= 1;
+        st.assign(2*SZ, Node());
+    }
+
+    void build(const vector<uint32_t>& base) {
+        int n = (int)base.size();
+        init(n);
+        for (int i = 0; i < n; ++i) {
+            uint32_t v = base[i] % MOD1; // same val for both mods
+            st[SZ+i].len = 1;
+            st[SZ+i].f1 = v % MOD1;
+            st[SZ+i].f2 = v % MOD2;
+            st[SZ+i].r1 = st[SZ+i].f1;
+            st[SZ+i].r2 = st[SZ+i].f2;
+        }
+        for (int i = SZ-1; i >= 1; --i) {
+            st[i] = merge(st[i<<1], st[i<<1|1]);
+        }
+    }
+
+    // point update: set position p to value v (char mapped to 1..26)
+    void point_set(int p, uint32_t v) {
+        int i = p + SZ;
+        st[i].len = 1;
+        st[i].f1 = v % MOD1;
+        st[i].f2 = v % MOD2;
+        st[i].r1 = st[i].f1;
+        st[i].r2 = st[i].f2;
+        for (i >>= 1; i >= 1; i >>= 1) st[i] = merge(st[i<<1], st[i<<1|1]);
+    }
+
+    // query range [l..r], returns both forward & reverse hash blocks
+    Node range_query(int l, int r) {
+        if (l > r) return Node();
+        Node L, R; // L accumulates from left, R from right, then merge
+        int li = l + SZ, ri = r + SZ;
+        while (li <= ri) {
+            if (li & 1) L = (L.len ? merge(L, st[li]) : st[li]), ++li;
+            if (!(ri & 1)) R = (R.len ? merge(st[ri], R) : st[ri]), --ri;
+            li >>= 1; ri >>= 1;
+        }
+        if (!L.len) return R;
+        if (!R.len) return L;
+        return merge(L, R);
+    }
+
+    // get forward hash block of [l..r] (pos-order) as DH
+    DH get_forward(int l, int r) {
+        auto nd = range_query(l, r);
+        return DH{nd.f1, nd.f2, nd.len};
+    }
+    // get reverse-direction block of [l..r] (i.e., read r..l)
+    DH get_reverse(int l, int r) {
+        auto nd = range_query(l, r);
+        return DH{nd.r1, nd.r2, nd.len};
+    }
+};
+
+// -------------------- Heavy-Light Decomposition --------------------
+struct HLD {
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos=0;
+
+    SegTree seg;
+
+    HLD(int n_=0): n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+    }
+
+    void add_edge(int u,int v){ g[u].push_back(v); g[v].push_back(u); }
+
+    int dfs(int u, int p) {
+        parent[u] = p;
+        sz[u] = 1;
+        int max_sz = 0;
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            int s = dfs(v, u);
+            sz[u] += s;
+            if (s > max_sz) max_sz = s, heavy[u] = v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u, int h) {
+        head[u] = h;
+        pos[u] = cur_pos++;
+        if (heavy[u] != -1) decompose(heavy[u], h);
+        for (int v : g[u]) if (v != parent[u] && v != heavy[u]) decompose(v, v);
+    }
+
+    // Build: values[u] is mapped (1..26) for node u
+    void build(int root, const vector<uint32_t>& values) {
+        depth[root] = 0;
+        dfs(root, 0);
+        cur_pos = 0;
+        decompose(root, root);
+
+        vector<uint32_t> base(n);
+        for (int u = 1; u <= n; ++u) base[pos[u]] = values[u];
+        seg.build(base);
+    }
+
+    // point update: set node u to mapped value val (1..26)
+    void point_set(int u, uint32_t val) {
+        seg.point_set(pos[u], val);
+    }
+
+    // Concatenate segments to form path hash(u->v)
+    // For 'up' segments (u climbs), we need reverse-reading on each [head..u].
+    // For 'down' segments (v descends), we need forward-reading.
+    DH path_hash_forward(int u, int v) {
+        DH up = dh_zero();     // concatenated in the order we climb (u->...->LCA)
+        DH down = dh_zero();   // will be concatenated in REVERSED collection order
+
+        vector<pair<pair<int,int>, bool>> seg_down; // ((l,r), dirForward=true)
+        while (head[u] != head[v]) {
+            if (depth[head[u]] >= depth[head[v]]) {
+                // segment [head[u]..u], but read from u up to head[u] → reverse on [pos[head[u]], pos[u]]
+                int l = pos[head[u]], r = pos[u];
+                DH part = seg.get_reverse(l, r); // read bottom->top
+                up = concat(up, part);
+                u = parent[head[u]];
+            } else {
+                // collect [head[v]..v] to append later in reverse order, read top->bottom
+                int l = pos[head[v]], r = pos[v];
+                seg_down.push_back({{l,r}, true}); // forward
+                v = parent[head[v]];
+            }
+        }
+        // now same head
+        if (depth[u] >= depth[v]) {
+            // segment [v..u], need to read u->v → reverse on [pos[v], pos[u]]
+            int l = pos[v], r = pos[u];
+            DH part = seg.get_reverse(l, r);
+            up = concat(up, part);
+        } else {
+            // segment [u..v], read u->v → forward on [pos[u], pos[v]]
+            int l = pos[u], r = pos[v];
+            seg_down.push_back({{l,r}, true}); // forward
+        }
+
+        // Append down segments in reverse of collection
+        for (int i = (int)seg_down.size()-1; i >= 0; --i) {
+            auto [lr, fwd] = seg_down[i];
+            int l = lr.first, r = lr.second;
+            DH part = fwd ? seg.get_forward(l, r) : seg.get_reverse(l, r);
+            down = concat(down, part);
+        }
+
+        return concat(up, down);
+    }
+
+    // path hash of v->u (used as reverse of u->v)
+    inline DH path_hash_reverse(int u, int v) {
+        return path_hash_forward(v, u);
+    }
+
+    bool is_pal_path(int u, int v) {
+        DH a = path_hash_forward(u, v);
+        DH b = path_hash_reverse(u, v);
+        return equal_hash(a, b);
+    }
+};
+
+// -------------------- Driver / Example I/O --------------------
+// Input format example:
+//   N
+//   string s   (1-indexed chars for nodes, s.size() == N)
+//   N-1 edges: u v
+//   Q
+//   then Q lines:
+//     - "U u c"  -> set node u to char c
+//     - "Q u v"  -> print YES/NO if path(u,v) is palindrome
+//
+// Characters are assumed lowercase 'a'..'z'. Map to 1..26 (you can extend easily).
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int N; 
+    if (!(cin >> N)) return 0;
+
+    string s; cin >> s;
+    if ((int)s.size() != N) {
+        // If input gives s without newline, adjust, but assume correct format.
+    }
+
+    HLD hld(N);
+    for (int i = 0; i < N-1; ++i) {
+        int u,v; cin >> u >> v;
+        hld.add_edge(u,v);
+    }
+
+    // Precompute powers for the maximum N (safe upper bound N)
+    P.init(N + 5);
+
+    // Prepare initial node values (1..26)
+    vector<uint32_t> val(N+1, 0);
+    for (int i = 1; i <= N; ++i) {
+        char c = s[i-1];
+        uint32_t x = 1 + (uint32_t)(c - 'a'); // map 'a'..'z' to 1..26
+        val[i] = x;
+    }
+
+    hld.build(/*root=*/1, val);
+
+    int Q; cin >> Q;
+    while (Q--) {
+        char tp; cin >> tp;
+        if (tp == 'U') {
+            int u; char c; cin >> u >> c;
+            uint32_t x = 1 + (uint32_t)(c - 'a');
+            hld.point_set(u, x);
+        } else if (tp == 'Q') {
+            int u,v; cin >> u >> v;
+            cout << (hld.is_pal_path(u, v) ? "YES\n" : "NO\n");
+        } else {
+            // ignore / extend
+        }
+    }
+    return 0;
+}
+//-------GCD on path-----
+
+// =========================== HLD: GCD on Nodes and Edges ===========================
+// Supports both node-based and edge-based GCD queries + point updates.
+//
+// API (after adding edges and calling build()):
+//   // node-based
+//   void    point_set_node(int u, long long x);
+//   long long path_gcd_nodes(int u, int v);
+//
+//   // edge-based
+//   void    point_set_edge_by_index(int idx, long long x); // idx = 1..(N-1) as added
+//   long long path_gcd_edges(int u, int v);
+//
+// Notes:
+//  - Edges are 1-indexed in the order you call add_edge(u, v, w).
+//  - Edge values are placed on the deeper endpoint's position in the base array.
+//  - You can pass initial node values and edge weights into build().
+//  - Complexity: O(N) build; O(log^2 N) per query/update.
+//
+// A small demo is in main().
+// ===================================================================================
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct SegTreeGCD {
+    int SZ = 0;
+    vector<long long> st;
+
+    static inline long long gmerge(long long a, long long b) {
+        if (a == 0) return b;
+        if (b == 0) return a;
+        return std::gcd(a, b);
+    }
+
+    void init(int n) {
+        SZ = 1; while (SZ < n) SZ <<= 1;
+        st.assign(2*SZ, 0LL);
+    }
+
+    void build(const vector<long long>& base) {
+        int n = (int)base.size();
+        init(n);
+        for (int i = 0; i < n; ++i) st[SZ + i] = base[i];
+        for (int i = SZ - 1; i >= 1; --i) st[i] = gmerge(st[i<<1], st[i<<1|1]);
+    }
+
+    // point set: a[p] = x
+    void point_set(int p, long long x) {
+        int i = p + SZ;
+        st[i] = x;
+        for (i >>= 1; i >= 1; i >>= 1) st[i] = gmerge(st[i<<1], st[i<<1|1]);
+    }
+
+    // range gcd on [l..r]
+    long long range_gcd(int l, int r) {
+        if (l > r) return 0;
+        long long L = 0, R = 0;
+        int li = l + SZ, ri = r + SZ;
+        while (li <= ri) {
+            if (li & 1) L = gmerge(L, st[li++]);
+            if (!(ri & 1)) R = gmerge(st[ri--], R);
+            li >>= 1; ri >>= 1;
+        }
+        return gmerge(L, R);
+    }
+};
+
+struct HLD {
+    struct Edge { int u, v; long long w; };
+
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos = 0;
+
+    vector<Edge> edges;         // edges[1..m]
+    vector<int>  edge_to_node;  // map edge index -> deeper endpoint node
+
+    // two separate segtrees: node values and edge values
+    SegTreeGCD segNode, segEdge;
+
+    HLD(int n_=0) : n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+
+        edges.clear();
+        edge_to_node.clear();
+        edges.push_back({0,0,0}); // 1-indexed
+    }
+
+    void add_edge(int u, int v, long long w = 0) {
+        g[u].push_back(v);
+        g[v].push_back(u);
+        edges.push_back({u, v, w});
+    }
+
+    int dfs(int u, int p) {
+        parent[u] = p;
+        sz[u] = 1;
+        int max_sz = 0;
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            int s = dfs(v, u);
+            sz[u] += s;
+            if (s > max_sz) max_sz = s, heavy[u] = v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u, int h) {
+        head[u] = h;
+        pos[u] = cur_pos++;
+        if (heavy[u] != -1) decompose(heavy[u], h);
+        for (int v : g[u])
+            if (v != parent[u] && v != heavy[u])
+                decompose(v, v);
+    }
+
+    // Build decomposition + segment trees.
+    // node_val: size n+1 (1..n) — node values
+    // edge weights come from edges[].w (set via add_edge).
+    void build(int root,
+               const vector<long long>& node_val) {
+        depth[root] = 0;
+        dfs(root, 0);
+        cur_pos = 0;
+        decompose(root, root);
+
+        // Build base arrays
+        vector<long long> baseNode(n, 0);
+        for (int u = 1; u <= n; ++u) baseNode[pos[u]] = node_val[u];
+
+        vector<long long> baseEdge(n, 0);
+        edge_to_node.assign((int)edges.size(), 0);
+        for (int i = 1; i < (int)edges.size(); ++i) {
+            int u = edges[i].u, v = edges[i].v;
+            int child = (parent[u] == v ? u : (parent[v] == u ? v : (depth[u] > depth[v] ? u : v)));
+            edge_to_node[i] = child;
+            baseEdge[pos[child]] = edges[i].w; // deeper endpoint carries the edge's value
+        }
+
+        segNode.build(baseNode);
+        segEdge.build(baseEdge);
+    }
+
+    // ---------------------- Node-based operations ----------------------
+    void point_set_node(int u, long long x) {
+        segNode.point_set(pos[u], x);
+    }
+
+    long long path_gcd_nodes(int u, int v) {
+        long long res = 0;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            int hu = head[u];
+            res = std::gcd(res, segNode.range_gcd(pos[hu], pos[u]));
+            u = parent[hu];
+        }
+        if (depth[u] > depth[v]) swap(u, v);
+        res = std::gcd(res, segNode.range_gcd(pos[u], pos[v]));
+        return res;
+    }
+
+    // ---------------------- Edge-based operations ----------------------
+    void point_set_edge_by_index(int idx, long long x) {
+        int node = edge_to_node[idx];
+        // edge stored at pos[node]
+        segEdge.point_set(pos[node], x);
+    }
+
+    long long path_gcd_edges(int u, int v) {
+        long long res = 0;
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) swap(u, v);
+            // full segment [head[u]..u] (all those edges lie entirely on the path)
+            res = std::gcd(res, segEdge.range_gcd(pos[head[u]], pos[u]));
+            u = parent[head[u]];
+        }
+        // same head: exclude the LCA node position (no edge above LCA)
+        if (depth[u] < depth[v]) swap(u, v); // u is deeper
+        if (pos[v] + 1 <= pos[u]) {
+            res = std::gcd(res, segEdge.range_gcd(pos[v] + 1, pos[u]));
+        }
+        return res;
+    }
+};
+
+// ------------------------------- Demo / Usage -------------------------------
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    // Example tree (1-indexed)
+    // 1-2(6), 1-3(9), 2-4(15), 2-5(21), 3-6(3), 3-7(12)
+    int n = 7;
+    HLD hld(n);
+
+    // node values:
+    vector<long long> node_val(n+1, 0);
+    for (int i = 1; i <= n; ++i) node_val[i] = 10*i; // arbitrary
+
+    // add edges with weights (edge index = order added)
+    hld.add_edge(1,2,6);
+    hld.add_edge(1,3,9);
+    hld.add_edge(2,4,15);
+    hld.add_edge(2,5,21);
+    hld.add_edge(3,6,3);
+    hld.add_edge(3,7,12);
+
+    hld.build(/*root=*/1, node_val);
+
+    // -------- Node-based queries --------
+    cout << "GCD(nodes on path 4..7): " << hld.path_gcd_nodes(4,7) << "\n";
+    hld.point_set_node(2, 14);
+    cout << "After set node 2=14, GCD(nodes on path 4..7): "
+         << hld.path_gcd_nodes(4,7) << "\n";
+
+    // -------- Edge-based queries --------
+    cout << "GCD(edges on path 4..7): " << hld.path_gcd_edges(4,7) << "\n";
+    // change edge (2,4) which is the 3rd edge added → idx=3
+    hld.point_set_edge_by_index(3, 27);
+    cout << "After set edge(2,4)=27, GCD(edges on path 4..7): "
+         << hld.path_gcd_edges(4,7) << "\n";
+
+    return 0;
+}
+
+///---- path u to v  is pallindrom or not---
+
+
+// ====================== HLD + Double Hash Palindrome on Paths (Nodes & Edges) ======================
+// Operations supported:
+//
+//   NODE-BASED
+//     UN u c   : set node u to character c
+//     QN u v   : is the node-string along path u..v a palindrome?
+//
+//   EDGE-BASED (edges are 1-indexed by the order you add them)
+//     UE i c   : set edge i to character c
+//     QE u v   : is the edge-string along path u..v a palindrome?
+//
+// Idea (both cases):
+//   Build HLD, one segtree for nodes, one for edges. Each segtree node stores:
+//     - forward hash (l->r) and reverse hash (r->l), plus length.
+//   A path hash (u->v) is built by concatenating:
+//     - "up" segments (read bottom->top) → use reverse hash on [l..r]
+//     - "down" segments (read top->bottom) → use forward hash on [l..r], appended in reverse collection order.
+//   Palindrome iff H(u->v) == H(v->u) under both moduli.
+//
+// Characters assumed 'a'..'z' → mapped to 1..26 (easy to extend).
+//
+// Input sketch:
+//   N
+//   s (string of length N; node chars)
+//   N-1 lines: u v          // the tree edges (structure)
+//   N-1 chars line OR none  // OPTIONAL: if provided, initial edge chars in add order (see demo below)
+//   Q
+//   Q lines: one of UN/UE/QN/QE ...
+//
+// If you don't have initial edge chars, they'll default to 'a'.
+//
+// ===================================================================================================
+#include <bits/stdc++.h>
+using namespace std;
+
+// -------------------- Double Hash constants --------------------
+struct DH {
+    uint32_t a, b; // values mod M1, M2
+    int len;
+};
+
+static const uint32_t MOD1 = 1000000007u;
+static const uint32_t MOD2 = 1000000009u;
+static const uint64_t BASE1 = 911382323ull;
+static const uint64_t BASE2 = 972663749ull;
+
+struct PowTab {
+    vector<uint32_t> p1, p2; // base^i % MOD
+    void init(int n) {
+        p1.resize(n+1); p2.resize(n+1);
+        p1[0] = 1; p2[0] = 1;
+        for (int i = 1; i <= n; ++i) {
+            p1[i] = (uint64_t)p1[i-1] * (BASE1 % MOD1) % MOD1;
+            p2[i] = (uint64_t)p2[i-1] * (BASE2 % MOD2) % MOD2;
+        }
+    }
+    inline uint32_t pow1(int e) const { return p1[e]; }
+    inline uint32_t pow2(int e) const { return p2[e]; }
+} P;
+
+static inline DH concat(const DH& A, const DH& B) {
+    DH C;
+    C.len = A.len + B.len;
+    C.a = ( (uint64_t)A.a * P.pow1(B.len) + B.a ) % MOD1;
+    C.b = ( (uint64_t)A.b * P.pow2(B.len) + B.b ) % MOD2;
+    return C;
+}
+static inline bool equal_hash(const DH& A, const DH& B) {
+    return A.a == B.a && A.b == B.b && A.len == B.len;
+}
+static inline DH dh_zero() { return DH{0u, 0u, 0}; }
+
+// map 'a'..'z' to 1..26
+static inline uint32_t cv(char c) { return 1u + (uint32_t)(c - 'a'); }
+
+// -------------------- Segment Tree (forward + reverse hash) --------------------
+struct SegTree {
+    struct Node {
+        uint32_t f1=0, f2=0; // forward hash (l->r)
+        uint32_t r1=0, r2=0; // reverse hash (r->l)
+        int len=0;
+    };
+    int SZ=0;
+    vector<Node> st;
+
+    static Node merge(const Node &L, const Node &R) {
+        if (L.len == 0) return R;
+        if (R.len == 0) return L;
+        Node C;
+        C.len = L.len + R.len;
+        // forward: L || R
+        C.f1 = ( (uint64_t)L.f1 * P.pow1(R.len) + R.f1 ) % MOD1;
+        C.f2 = ( (uint64_t)L.f2 * P.pow2(R.len) + R.f2 ) % MOD2;
+        // reverse: R || L
+        C.r1 = ( (uint64_t)R.r1 * P.pow1(L.len) + L.r1 ) % MOD1;
+        C.r2 = ( (uint64_t)R.r2 * P.pow2(L.len) + L.r2 ) % MOD2;
+        return C;
+    }
+
+    void init(int n) {
+        SZ = 1; while (SZ < n) SZ <<= 1;
+        st.assign(2*SZ, Node());
+    }
+
+    void build(const vector<uint32_t>& base) {
+        int n = (int)base.size();
+        init(n);
+        for (int i = 0; i < n; ++i) {
+            uint32_t v1 = base[i] % MOD1, v2 = base[i] % MOD2;
+            st[SZ+i].len = 1;
+            st[SZ+i].f1 = v1;
+            st[SZ+i].f2 = v2;
+            st[SZ+i].r1 = v1;
+            st[SZ+i].r2 = v2;
+        }
+        for (int i = SZ-1; i >= 1; --i) st[i] = merge(st[i<<1], st[i<<1|1]);
+    }
+
+    // point set: position p = mapped value v (1..26)
+    void point_set(int p, uint32_t v) {
+        int i = p + SZ;
+        st[i].len = 1;
+        st[i].f1 = v % MOD1;
+        st[i].f2 = v % MOD2;
+        st[i].r1 = st[i].f1;
+        st[i].r2 = st[i].f2;
+        for (i >>= 1; i >= 1; i >>= 1) st[i] = merge(st[i<<1], st[i<<1|1]);
+    }
+
+    Node range_query(int l, int r) {
+        if (l > r) return Node();
+        Node L, R;
+        int li = l + SZ, ri = r + SZ;
+        while (li <= ri) {
+            if (li & 1) { L = merge(L, st[li]); ++li; }
+            if (!(ri & 1)) { R = merge(st[ri], R); --ri; }
+            li >>= 1; ri >>= 1;
+        }
+        return merge(L, R);
+    }
+
+    DH get_forward(int l, int r) {
+        auto nd = range_query(l, r);
+        return DH{nd.f1, nd.f2, nd.len};
+    }
+    DH get_reverse(int l, int r) {
+        auto nd = range_query(l, r);
+        return DH{nd.r1, nd.r2, nd.len};
+    }
+};
+
+// -------------------- Heavy-Light Decomposition --------------------
+struct HLD {
+    struct E { int u, v; uint32_t w; };
+
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos=0;
+
+    // for edges
+    vector<E> edges;          // edges[1..m], weights are char-mapped (1..26)
+    vector<int> edge_to_node; // edge index -> deeper endpoint
+
+    // two segtrees: node-characters and edge-characters
+    SegTree segNode, segEdge;
+
+    HLD(int n_=0): n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+
+        edges.clear();
+        edges.push_back({0,0,0}); // 1-index
+        edge_to_node.clear();
+    }
+
+    void add_edge(int u, int v, char c='a') { // default 'a' if not specified
+        g[u].push_back(v);
+        g[v].push_back(u);
+        edges.push_back({u, v, cv(c)});
+    }
+
+    int dfs(int u, int p) {
+        parent[u] = p;
+        sz[u] = 1;
+        int max_sz = 0;
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            int s = dfs(v, u);
+            sz[u] += s;
+            if (s > max_sz) max_sz = s, heavy[u] = v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u, int h) {
+        head[u] = h;
+        pos[u] = cur_pos++;
+        if (heavy[u] != -1) decompose(heavy[u], h);
+        for (int v : g[u]) if (v != parent[u] && v != heavy[u]) decompose(v, v);
+    }
+
+    // Build both segment trees.
+    // node_char[1..n] = mapped (1..26)
+    // edge chars were set via add_edge (edges[i].w) or can be updated later.
+    void build(int root, const vector<uint32_t>& node_char) {
+        depth[root] = 0;
+        dfs(root, 0);
+        cur_pos = 0;
+        decompose(root, root);
+
+        // Node base
+        vector<uint32_t> baseNode(n);
+        for (int u = 1; u <= n; ++u) baseNode[pos[u]] = node_char[u];
+
+        // Edge base (store on deeper endpoint)
+        edge_to_node.assign((int)edges.size(), 0);
+        vector<uint32_t> baseEdge(n, 0);
+        for (int i = 1; i < (int)edges.size(); ++i) {
+            int u = edges[i].u, v = edges[i].v;
+            int child = (parent[u] == v ? u : (parent[v] == u ? v : (depth[u] > depth[v] ? u : v)));
+            edge_to_node[i] = child;
+            baseEdge[pos[child]] = edges[i].w;
+        }
+
+        segNode.build(baseNode);
+        segEdge.build(baseEdge);
+    }
+
+    // -------------------- Node updates & queries --------------------
+    inline void node_set_char(int u, char c) {
+        segNode.point_set(pos[u], cv(c));
+    }
+
+    // path hash u->v on NODE-string
+    DH path_hash_forward_nodes(int u, int v) {
+        DH up = dh_zero(), down = dh_zero();
+        vector<pair<pair<int,int>, bool>> seg_down; // ((l,r), useForward?)
+
+        while (head[u] != head[v]) {
+            if (depth[head[u]] >= depth[head[v]]) {
+                int l = pos[head[u]], r = pos[u];
+                DH part = segNode.get_reverse(l, r); // read bottom->top
+                up = concat(up, part);
+                u = parent[head[u]];
+            } else {
+                int l = pos[head[v]], r = pos[v];
+                seg_down.push_back({{l, r}, true}); // forward
+                v = parent[head[v]];
+            }
+        }
+        if (depth[u] >= depth[v]) {
+            int l = pos[v], r = pos[u];
+            DH part = segNode.get_reverse(l, r);
+            up = concat(up, part);
+        } else {
+            int l = pos[u], r = pos[v];
+            seg_down.push_back({{l, r}, true});
+        }
+        for (int i = (int)seg_down.size()-1; i >= 0; --i) {
+            auto [lr, fwd] = seg_down[i];
+            DH part = fwd ? segNode.get_forward(lr.first, lr.second)
+                          : segNode.get_reverse(lr.first, lr.second);
+            down = concat(down, part);
+        }
+        return concat(up, down);
+    }
+    inline DH path_hash_reverse_nodes(int u, int v) { return path_hash_forward_nodes(v, u); }
+    inline bool is_pal_path_nodes(int u, int v) {
+        DH a = path_hash_forward_nodes(u, v);
+        DH b = path_hash_reverse_nodes(u, v);
+        return equal_hash(a, b);
+    }
+
+    // -------------------- Edge updates & queries --------------------
+    inline void edge_set_char_by_index(int idx, char c) {
+        int node = edge_to_node[idx];           // deeper endpoint
+        segEdge.point_set(pos[node], cv(c));    // stored exactly at that position
+    }
+
+    // path hash u->v on EDGE-string (exclude LCA position)
+    // Use ranges:
+    //   on the "u-side up" chain [head[u]..u] → edges are (pos[head[u]]+1 .. pos[u])
+    //   on the "v-side down" chain [head[v]..v] → edges are (pos[head[v]]+1 .. pos[v])
+    DH path_hash_forward_edges(int u, int v) {
+        DH up = dh_zero(), down = dh_zero();
+        vector<pair<pair<int,int>, bool>> seg_down;
+
+        while (head[u] != head[v]) {
+            if (depth[head[u]] >= depth[head[v]]) {
+                int l = pos[head[u]] + 1, r = pos[u];
+                if (l <= r) {
+                    DH part = segEdge.get_reverse(l, r); // bottom->top (edges)
+                    up = concat(up, part);
+                }
+                u = parent[head[u]];
+            } else {
+                int l = pos[head[v]] + 1, r = pos[v];
+                if (l <= r) seg_down.push_back({{l, r}, true}); // forward
+                v = parent[head[v]];
+            }
+        }
+        // same head
+        if (depth[u] >= depth[v]) {
+            int l = pos[v] + 1, r = pos[u]; // exclude LCA node
+            if (l <= r) {
+                DH part = segEdge.get_reverse(l, r);
+                up = concat(up, part);
+            }
+        } else {
+            int l = pos[u] + 1, r = pos[v];
+            if (l <= r) seg_down.push_back({{l, r}, true});
+        }
+
+        for (int i = (int)seg_down.size()-1; i >= 0; --i) {
+            auto [lr, fwd] = seg_down[i];
+            DH part = fwd ? segEdge.get_forward(lr.first, lr.second)
+                          : segEdge.get_reverse(lr.first, lr.second);
+            down = concat(down, part);
+        }
+        return concat(up, down);
+    }
+    inline DH path_hash_reverse_edges(int u, int v) { return path_hash_forward_edges(v, u); }
+    inline bool is_pal_path_edges(int u, int v) {
+        DH a = path_hash_forward_edges(u, v);
+        DH b = path_hash_reverse_edges(u, v);
+        return equal_hash(a, b);
+    }
+};
+
+// -------------------- Driver / Example --------------------
+// Example input (one possible format):
+//   7
+//   abcabca
+//   1 2
+//   1 3
+//   2 4
+//   2 5
+//   3 6
+//   3 7
+//   (optional line) edgechars = "bcdefg"   // if omitted, edges default to 'a'
+//   Q
+//   QN u v / UN u c / QE u v / UE i c
+//
+// Below is a flexible parser: it tries to read an optional edge-chars line
+// if the next token is alphabetic and its length == N-1.
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int N;
+    if (!(cin >> N)) return 0;
+
+    string s; cin >> s;                // node chars
+    HLD hld(N);
+    vector<pair<int,int>> rawEdges;
+    rawEdges.reserve(N-1);
+    for (int i = 0; i < N-1; ++i) {
+        int u, v; cin >> u >> v;
+        rawEdges.push_back({u, v});
+    }
+
+    // Precompute powers
+    P.init(N + 5);
+
+    // Try to read optional edge-char string
+    // Peek next: either Q (number) or a word (edge char line)
+    cin >> ws;
+    string maybeEdgeChars;
+    streampos sp = cin.tellg();
+    if (cin.peek() != EOF) {
+        if (isalpha(cin.peek())) {
+            cin >> maybeEdgeChars;
+            if ((int)maybeEdgeChars.size() != N-1) {
+                // not an edge char line; rollback
+                cin.clear();
+                cin.seekg(sp);
+                maybeEdgeChars.clear();
+            }
+        }
+    }
+
+    // Build the graph with edge chars (default 'a' if not provided)
+    for (int i = 0; i < N-1; ++i) {
+        char ec = 'a';
+        if (!maybeEdgeChars.empty()) ec = maybeEdgeChars[i];
+        hld.add_edge(rawEdges[i].first, rawEdges[i].second, ec);
+    }
+
+    // Build node char array
+    vector<uint32_t> node_char(N+1, 0);
+    for (int i = 1; i <= N; ++i) node_char[i] = cv(s[i-1]);
+    hld.build(/*root=*/1, node_char);
+
+    int Q; 
+    if (!(cin >> Q)) Q = 0;
+
+    while (Q--) {
+        string tp; cin >> tp;
+        if (tp == "UN") {                // set node char
+            int u; char c; cin >> u >> c;
+            hld.node_set_char(u, c);
+        } else if (tp == "QN") {         // palindrome on node-string
+            int u, v; cin >> u >> v;
+            cout << (hld.is_pal_path_nodes(u, v) ? "YES\n" : "NO\n");
+        } else if (tp == "UE") {         // set edge idx char
+            int idx; char c; cin >> idx >> c;
+            hld.edge_set_char_by_index(idx, c);
+        } else if (tp == "QE") {         // palindrome on edge-string
+            int u, v; cin >> u >> v;
+            cout << (hld.is_pal_path_edges(u, v) ? "YES\n" : "NO\n");
+        } else {
+            // ignore / extend (e.g., custom commands)
+        }
+    }
+    return 0;
+}
+
+
+////---- value<=k
+
+// =================== HLD: Count values >= x on path (Node + Edge) ===================
+// Supports both node-based and edge-based queries/updates:
+//
+//   UN u val    -> set node u to val
+//   QN u v x    -> count nodes with value >= x on path u..v
+//
+//   UE i val    -> set edge i (1-indexed add order) to val
+//   QE u v x    -> count edges with value >= x on path u..v
+//
+// Implementation:
+//   - Heavy-Light Decomposition for path decomposition
+//   - Segment tree storing sorted vectors (merge-sort tree)
+//   - Point updates (erase+insert using binary search)
+//   - Edge values stored on deeper endpoint
+//
+// Complexity:
+//   - Build: O(N log N)
+//   - Update: O(log² N)
+//   - Query: O(log² N)
+//
+// ================================================================================
+
+#include <bits/stdc++.h>
+using namespace std;
+
+// ---------------- Segment Tree with sorted vectors ----------------
+struct SegTree {
+    int n;
+    vector<vector<long long>> st;
+    vector<long long> base;
+
+    void build(const vector<long long>& a) {
+        base = a;
+        n = a.size();
+        st.assign(4*n, {});
+        build_rec(1, 0, n-1);
+    }
+
+    void build_rec(int p, int l, int r) {
+        if (l == r) {
+            st[p] = {base[l]};
+            return;
+        }
+        int m = (l+r)/2;
+        build_rec(p*2, l, m);
+        build_rec(p*2+1, m+1, r);
+        st[p].resize(st[p*2].size() + st[p*2+1].size());
+        merge(st[p*2].begin(), st[p*2].end(),
+              st[p*2+1].begin(), st[p*2+1].end(),
+              st[p].begin());
+    }
+
+    // point update: replace base[idx] with new_val
+    void point_update(int idx, long long new_val) {
+        point_update_rec(1, 0, n-1, idx, new_val);
+    }
+
+    void point_update_rec(int p, int l, int r, int idx, long long new_val) {
+        // erase old value, insert new value
+        auto it = lower_bound(st[p].begin(), st[p].end(), base[idx]);
+        if (it != st[p].end() && *it == base[idx]) st[p].erase(it);
+        auto pos = lower_bound(st[p].begin(), st[p].end(), new_val);
+        st[p].insert(pos, new_val);
+        if (l == r) { base[idx] = new_val; return; }
+        int m = (l+r)/2;
+        if (idx <= m) point_update_rec(p*2, l, m, idx, new_val);
+        else point_update_rec(p*2+1, m+1, r, idx, new_val);
+    }
+
+    // count values >= x in [L..R]
+    int query_ge(int L, int R, long long x) {
+        return query_ge_rec(1, 0, n-1, L, R, x);
+    }
+
+    int query_ge_rec(int p, int l, int r, int L, int R, long long x) {
+        if (r < L || l > R) return 0;
+        if (L <= l && r <= R) {
+            auto it = lower_bound(st[p].begin(), st[p].end(), x);
+            return (int)(st[p].end() - it);
+        }
+        int m = (l+r)/2;
+        return query_ge_rec(p*2, l, m, L, R, x)
+             + query_ge_rec(p*2+1, m+1, r, L, R, x);
+    }
+};
+
+// ---------------- Heavy-Light Decomposition ----------------
+struct HLD {
+    struct Edge { int u,v; long long w; };
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos = 0;
+    vector<Edge> edges;
+    vector<int> edge_to_node;
+
+    SegTree segNode, segEdge;
+    vector<long long> node_val, edge_val;
+
+    HLD(int n_=0): n(n_) { if (n) init(n); }
+
+    void init(int n_) {
+        n = n_;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+        edges.clear(); edges.push_back({0,0,0});
+        edge_to_node.clear();
+        node_val.assign(n+1, 0);
+    }
+
+    void add_edge(int u,int v,long long w=0){
+        g[u].push_back(v);
+        g[v].push_back(u);
+        edges.push_back({u,v,w});
+    }
+
+    int dfs(int u,int p){
+        parent[u]=p;
+        sz[u]=1;
+        int max_sz=0;
+        for(int v:g[u]) if(v!=p){
+            depth[v]=depth[u]+1;
+            int s=dfs(v,u);
+            sz[u]+=s;
+            if(s>max_sz) max_sz=s, heavy[u]=v;
+        }
+        return sz[u];
+    }
+
+    void decompose(int u,int h){
+        head[u]=h;
+        pos[u]=cur_pos++;
+        if(heavy[u]!=-1) decompose(heavy[u],h);
+        for(int v:g[u]) if(v!=parent[u] && v!=heavy[u])
+            decompose(v,v);
+    }
+
+    void build(int root,const vector<long long>& nodeInit){
+        node_val=nodeInit;
+        depth[root]=0;
+        dfs(root,0);
+        cur_pos=0;
+        decompose(root,root);
+
+        // map edges to deeper node
+        edge_to_node.assign(edges.size(),0);
+        vector<long long> baseNode(n),baseEdge(n,0);
+        for(int u=1;u<=n;++u) baseNode[pos[u]]=node_val[u];
+        edge_val.assign(edges.size(),0);
+        for(int i=1;i<(int)edges.size();++i){
+            int u=edges[i].u,v=edges[i].v;
+            int child=(parent[u]==v?u:(parent[v]==u?v:(depth[u]>depth[v]?u:v)));
+            edge_to_node[i]=child;
+            baseEdge[pos[child]]=edges[i].w;
+            edge_val[i]=edges[i].w;
+        }
+        segNode.build(baseNode);
+        segEdge.build(baseEdge);
+    }
+
+    // ---------------- Node ops ----------------
+    void node_update(int u,long long val){
+        segNode.point_update(pos[u],val);
+    }
+    int path_count_nodes(int u,int v,long long x){
+        int ans=0;
+        while(head[u]!=head[v]){
+            if(depth[head[u]]<depth[head[v]]) swap(u,v);
+            ans+=segNode.query_ge(pos[head[u]],pos[u],x);
+            u=parent[head[u]];
+        }
+        if(depth[u]>depth[v]) swap(u,v);
+        ans+=segNode.query_ge(pos[u],pos[v],x);
+        return ans;
+    }
+
+    // ---------------- Edge ops ----------------
+    void edge_update_by_index(int idx,long long val){
+        int node=edge_to_node[idx];
+        segEdge.point_update(pos[node],val);
+        edge_val[idx]=val;
+    }
+    int path_count_edges(int u,int v,long long x){
+        int ans=0;
+        while(head[u]!=head[v]){
+            if(depth[head[u]]<depth[head[v]]) swap(u,v);
+            ans+=segEdge.query_ge(pos[head[u]]+1,pos[u],x);
+            u=parent[head[u]];
+        }
+        if(depth[u]<depth[v]) swap(u,v);
+        ans+=segEdge.query_ge(pos[v]+1,pos[u],x);
+        return ans;
+    }
+};
+
+// ---------------- Demo ----------------
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int N;
+    if(!(cin>>N)) return 0;
+    vector<long long> nodeInit(N+1);
+    for(int i=1;i<=N;++i) cin>>nodeInit[i];
+    HLD hld(N);
+    for(int i=0;i<N-1;++i){
+        int u,v;cin>>u>>v;
+        hld.add_edge(u,v,0); // initial edge value 0
+    }
+    hld.build(1,nodeInit);
+
+    int Q;cin>>Q;
+    while(Q--){
+        string t;cin>>t;
+        if(t=="UN"){
+            int u;long long v;cin>>u>>v;
+            hld.node_update(u,v);
+        }else if(t=="QN"){
+            int u,v;long long x;cin>>u>>v>>x;
+            cout<<hld.path_count_nodes(u,v,x)<<'\n';
+        }else if(t=="UE"){
+            int i;long long v;cin>>i>>v;
+            hld.edge_update_by_index(i,v);
+        }else if(t=="QE"){
+            int u,v;long long x;cin>>u>>v>>x;
+            cout<<hld.path_count_edges(u,v,x)<<'\n';
+        }
+    }
+    return 0;
+}
+///------mode of u to v-----
+
+
+// ====================== HLD + Fenwick (per category) : MODE on PATH ======================
+// Assumptions:
+//   - Number of distinct opinion values (categories) is small (e.g., <= 256).
+//   - Opinions can be arbitrary tokens (strings/ints); we compress them to [0..C-1].
+//   - Online updates supported.
+//
+// API via input (example format):
+//   N
+//   v1 v2 ... vN               (initial node opinions; tokens)
+//   N-1 lines: u v             (tree edges; 1-indexed)
+//   Q
+//   Q lines, each either:
+//     - U u val                (update node u to opinion 'val')
+//     - Q u v                  (query: print "<mode_value> <frequency>" on path u..v)
+//
+// Complexity:
+//   Build:  O(N log N + C*N)      (C Fenwicks built by N inserts)
+//   Update: O(C log N)             (erase one bit, add one bit)
+//   Query:  O(C log^2 N)           (O(log N) ranges * O(log N) BIT per category)
+// -----------------------------------------------------------------------------------------
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Fenwick {
+    int n;
+    vector<int> bit;
+    Fenwick(int n=0){init(n);}
+    void init(int n_){ n=n_; bit.assign(n+1,0); }
+    inline void add(int idx,int delta){ for(++idx; idx<=n; idx+=idx&-idx) bit[idx]+=delta; }
+    inline int sum_prefix(int idx){ int s=0; for(++idx; idx>0; idx-=idx&-idx) s+=bit[idx]; return s; }
+    inline int range_sum(int l,int r){ if(l>r) return 0; return sum_prefix(r) - (l?sum_prefix(l-1):0); }
+};
+
+struct HLD {
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos = 0;
+
+    HLD(int n=0){ if(n) init(n); }
+    void init(int n_){
+        n=n_;
+        g.assign(n+1,{});
+        parent.assign(n+1,0);
+        depth.assign(n+1,0);
+        heavy.assign(n+1,-1);
+        head.assign(n+1,0);
+        pos.assign(n+1,0);
+        sz.assign(n+1,0);
+        cur_pos=0;
+    }
+    void add_edge(int u,int v){ g[u].push_back(v); g[v].push_back(u); }
+
+    int dfs(int u,int p){
+        parent[u]=p; sz[u]=1;
+        int best=0;
+        for(int v:g[u]) if(v!=p){
+            depth[v]=depth[u]+1;
+            int s=dfs(v,u);
+            sz[u]+=s;
+            if(s>best) best=s, heavy[u]=v;
+        }
+        return sz[u];
+    }
+    void decompose(int u,int h){
+        head[u]=h;
+        pos[u]=cur_pos++;
+        if(heavy[u]!=-1) decompose(heavy[u],h);
+        for(int v:g[u]) if(v!=parent[u] && v!=heavy[u]) decompose(v,v);
+    }
+    void build(int root=1){
+        depth[root]=0;
+        dfs(root,0);
+        cur_pos=0;
+        decompose(root,root);
+    }
+};
+
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int N;
+    if(!(cin>>N)) return 0;
+
+    // Read initial opinions as tokens (strings for generality)
+    vector<string> init_val_str(N+1);
+    for(int i=1;i<=N;++i) cin>>init_val_str[i];
+
+    HLD hld(N);
+    for(int i=0;i<N-1;++i){
+        int u,v; cin>>u>>v;
+        hld.add_edge(u,v);
+    }
+    hld.build(1);
+
+    int Q; cin>>Q;
+    struct Query { char type; int u,v; string s; };
+    vector<Query> queries; queries.reserve(Q);
+
+    // Collect all values (for compression): initial + all updates
+    vector<string> all_vals;
+    all_vals.reserve(N+Q);
+    for(int i=1;i<=N;++i) all_vals.push_back(init_val_str[i]);
+
+    for(int i=0;i<Q;++i){
+        char t; cin>>t;
+        if(t=='U'){
+            int u; string s; cin>>u>>s;
+            queries.push_back({t,u,0,s});
+            all_vals.push_back(s);
+        }else if(t=='Q'){
+            int u,v; cin>>u>>v;
+            queries.push_back({t,u,v,""});
+        }else{
+            // unknown; consume safely if needed
+        }
+    }
+
+    // Coordinate compression of values
+    sort(all_vals.begin(), all_vals.end());
+    all_vals.erase(unique(all_vals.begin(), all_vals.end()), all_vals.end());
+    int C = (int)all_vals.size();
+    // If C is large, this approach may be slow/memory heavy. Works best for small C (<= 256 or so).
+    // You can enforce a max and fail/exit if needed.
+
+    auto get_id = [&](const string &s)->int{
+        int id = (int)(lower_bound(all_vals.begin(), all_vals.end(), s) - all_vals.begin());
+        return id; // 0..C-1
+    };
+
+    // Build base array in HLD order with category ids
+    vector<int> cat(N+1, -1);
+    for(int i=1;i<=N;++i) cat[i] = get_id(init_val_str[i]);
+
+    vector<int> base(N, 0);
+    for(int u=1; u<=N; ++u) base[hld.pos[u]] = cat[u];
+
+    // Fenwick per category
+    vector<Fenwick> FT(C, Fenwick(N));
+    for(int i=0;i<N;++i){
+        int c = base[i];
+        FT[c].add(i, +1);
+    }
+
+    auto path_count_cat = [&](int u,int v,int c)->int{
+        int ans=0;
+        while(hld.head[u] != hld.head[v]){
+            if(hld.depth[hld.head[u]] < hld.depth[hld.head[v]]) swap(u,v);
+            int hu = hld.head[u];
+            ans += FT[c].range_sum(hld.pos[hu], hld.pos[u]);
+            u = hld.parent[hu];
+        }
+        if(hld.depth[u] > hld.depth[v]) swap(u,v);
+        ans += FT[c].range_sum(hld.pos[u], hld.pos[v]);
+        return ans;
+    };
+
+    auto node_update = [&](int u, int newc){
+        int p = hld.pos[u];
+        int oldc = cat[u];
+        if(oldc == newc) return;
+        FT[oldc].add(p, -1);
+        FT[newc].add(p, +1);
+        cat[u] = newc;
+    };
+
+    // Process queries
+    for(const auto &qq : queries){
+        if(qq.type=='U'){
+            int u = qq.u;
+            int newc = get_id(qq.s);
+            node_update(u, newc);
+        }else if(qq.type=='Q'){
+            int u = qq.u, v = qq.v;
+            // scan all categories, pick best
+            int bestCount = -1, bestCat = -1;
+            for(int c=0;c<C;++c){
+                int cnt = path_count_cat(u, v, c);
+                if(cnt > bestCount){
+                    bestCount = cnt;
+                    bestCat = c;
+                }
+            }
+            // print mode value (original token) and its frequency
+            cout << all_vals[bestCat] << ' ' << bestCount << '\n';
+        }
+    }
+    return 0;
+}
+///mex on u to v path
+
+// =================== MEX on Tree Paths (Permutation Case) ====================
+// Approach:
+//   - HLD to split any path u..v into O(log N) heavy segments.
+//   - Lazy segtree supports range add and global min query.
+//   - For query MEX(u,v):
+//       1) range-add +INF on the path (temporarily "hide" nodes on the path)
+//       2) ans = seg.global_min()
+//       3) range-add -INF on the path (rollback)
+//       4) if ans >= INF, path covered whole tree -> MEX = N; else MEX = ans
+//
+// Assumes node values form a permutation of [0..N-1].
+// Supports point updates: set node u to new value (caller must keep uniqueness).
+//
+// Complexity:
+//   Build: O(N)
+//   Query: O(log^2 N)   (two path adds + one O(1) min read)
+//   Update: O(log N)
+// =============================================================================
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct LazySeg {
+    struct Node {
+        long long mn = (long long)4e18;
+        long long add = 0;
+    };
+    int n;
+    vector<Node> st;
+
+    LazySeg(int n=0){ if(n) init(n); }
+    void init(int N) { n=N; st.assign(4*n, Node()); }
+
+    inline void apply(int p, long long v) {
+        st[p].mn += v;
+        st[p].add += v;
+    }
+    inline void push(int p) {
+        if (st[p].add != 0) {
+            apply(p<<1,   st[p].add);
+            apply(p<<1|1, st[p].add);
+            st[p].add = 0;
+        }
+    }
+    inline void pull(int p) {
+        st[p].mn = min(st[p<<1].mn, st[p<<1|1].mn);
+    }
+
+    void build(int p, int l, int r, const vector<long long>& a) {
+        if (l==r) { st[p].mn = a[l]; st[p].add = 0; return; }
+        int m=(l+r)>>1;
+        build(p<<1,l,m,a); build(p<<1|1,m+1,r,a);
+        pull(p);
+    }
+    void build(const vector<long long>& a) { init((int)a.size()); if(n) build(1,0,n-1,a); }
+
+    void range_add(int p, int l, int r, int L, int R, long long v) {
+        if (R<l || r<L) return;
+        if (L<=l && r<=R) { apply(p,v); return; }
+        push(p);
+        int m=(l+r)>>1;
+        range_add(p<<1,l,m,L,R,v);
+        range_add(p<<1|1,m+1,r,L,R,v);
+        pull(p);
+    }
+    void range_add(int L, int R, long long v) { if(L<=R) range_add(1,0,n-1,L,R,v); }
+
+    void point_set(int p, int l, int r, int idx, long long val) {
+        if (l==r) { st[p].mn = val; st[p].add = 0; return; }
+        push(p);
+        int m=(l+r)>>1;
+        if (idx<=m) point_set(p<<1,l,m,idx,val);
+        else        point_set(p<<1|1,m+1,r,idx,val);
+        pull(p);
+    }
+    void point_set(int idx, long long val) { point_set(1,0,n-1,idx,val); }
+
+    long long global_min() const { return st[1].mn; }
+};
+
+struct HLD {
+    int n;
+    vector<vector<int>> g;
+    vector<int> parent, depth, heavy, head, pos, sz;
+    int cur_pos = 0;
+
+    LazySeg seg;
+    vector<long long> base; // values arranged by pos[]
+
+    HLD(int n=0){ if(n) init(n); }
+    void init(int N){
+        n=N;
+        g.assign(n+1, {});
+        parent.assign(n+1, 0);
+        depth.assign(n+1, 0);
+        heavy.assign(n+1, -1);
+        head.assign(n+1, 0);
+        pos.assign(n+1, 0);
+        sz.assign(n+1, 0);
+        cur_pos = 0;
+    }
+    void add_edge(int u,int v){ g[u].push_back(v); g[v].push_back(u); }
+
+    int dfs(int u,int p){
+        parent[u]=p; sz[u]=1;
+        int best=0;
+        for(int v:g[u]) if(v!=p){
+            depth[v]=depth[u]+1;
+            int s=dfs(v,u);
+            sz[u]+=s;
+            if(s>best){ best=s; heavy[u]=v; }
+        }
+        return sz[u];
+    }
+    void decompose(int u,int h){
+        head[u]=h; pos[u]=cur_pos++;
+        if(heavy[u]!=-1) decompose(heavy[u],h);
+        for(int v:g[u]) if(v!=parent[u] && v!=heavy[u]) decompose(v,v);
+    }
+
+    void build(int root, const vector<long long>& val){ // val[1..n]
+        depth[root]=0;
+        dfs(root,0);
+        cur_pos=0;
+        decompose(root,root);
+        base.assign(n,0);
+        for(int u=1;u<=n;++u) base[pos[u]] = val[u];
+        seg.build(base);
+    }
+
+    // range add along path u..v
+    void path_add(int u,int v,long long delta){
+        while(head[u]!=head[v]){
+            if(depth[head[u]]<depth[head[v]]) swap(u,v);
+            seg.range_add(pos[head[u]], pos[u], delta);
+            u = parent[head[u]];
+        }
+        if(depth[u]>depth[v]) swap(u,v);
+        seg.range_add(pos[u], pos[v], delta);
+    }
+
+    // point set: set node u's value to x
+    void point_set(int u, long long x){
+        seg.point_set(pos[u], x);
+    }
+};
+
+// ------------------------------ Driver / Example ------------------------------
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int N;
+    if(!(cin>>N)) return 0;
+
+    // Node values: must be a permutation of [0..N-1]
+    vector<long long> val(N+1);
+    for(int i=1;i<=N;++i) cin>>val[i];
+
+    HLD hld(N);
+    for(int i=0;i<N-1;++i){
+        int u,v; cin>>u>>v;
+        hld.add_edge(u,v);
+    }
+    hld.build(1, val);
+
+    const long long INF = (long long)1e15; // >> max original value (≤ N-1)
+
+    int Q; cin>>Q;
+    while(Q--){
+        char t; cin>>t;
+        if(t=='Q'){ // query mex on path
+            int u,v; cin>>u>>v;
+            hld.path_add(u,v, +INF);
+            long long mn = hld.seg.global_min();
+            hld.path_add(u,v, -INF);
+            long long ans = (mn >= INF ? (long long)N : mn);
+            cout << ans << '\n';
+        }else if(t=='U'){ // point update: set node u to x (caller must keep uniqueness!)
+            int u; long long x; cin>>u>>x;
+            hld.point_set(u, x);
+        }
+    }
+    return 0;
+}
+////  mex of array from l to r ---
+
+// ===================== MEX on [l, r] via Persistent SegTree =====================
+// Static array (no updates). Queries in O(log N).
+//
+// Principle:
+//   - Domain is values v in [0..N]. (mex of any subarray <= its length <= N)
+//   - Build prefix versions root[i]. At i, set last_pos[a[i]] = i for a[i] in [0..N].
+//   - For query [l, r], answer is smallest v with last_pos(v) < l in version root[r].
+//
+// Input example:
+//   n
+//   a1 a2 ... an
+//   q
+//   q lines: l r
+//
+// Output: mex for each query.
+//
+// Complexity: Build O(N log N), Query O(log N).
+// ================================================================================
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Node {
+    int lc = 0, rc = 0;
+    int mn = 0; // minimum 'last position' in this value-interval
+};
+
+struct PersistentSegTree {
+    int N;                              // value domain is [0..N]
+    vector<Node> seg;                   // nodes pool
+    vector<int> root;                   // root[i] -> version after processing prefix i
+
+    PersistentSegTree(int N=0): N(N) {
+        seg.reserve((N+5) * 20);        // heuristic
+        seg.push_back(Node());          // seg[0] = null
+    }
+
+    int build(int l, int r) {           // build initial tree with mn = 0
+        int p = new_node();
+        if (l == r) {
+            seg[p].mn = 0;
+            return p;
+        }
+        int m = (l + r) >> 1;
+        seg[p].lc = build(l, m);
+        seg[p].rc = build(m+1, r);
+        seg[p].mn = 0;
+        return p;
+    }
+
+    int new_node() {
+        seg.push_back(Node());
+        return (int)seg.size() - 1;
+    }
+
+    int update(int prev, int l, int r, int pos, int val) {
+        int p = new_node();
+        seg[p] = seg[prev];             // clone
+        if (l == r) {
+            seg[p].mn = val;            // set last_pos(value) = index
+            return p;
+        }
+        int m = (l + r) >> 1;
+        if (pos <= m) seg[p].lc = update(seg[prev].lc, l, m, pos, val);
+        else          seg[p].rc = update(seg[prev].rc, m+1, r, pos, val);
+        seg[p].mn = min(seg[ seg[p].lc ].mn, seg[ seg[p].rc ].mn);
+        return p;
+    }
+
+    // Find the smallest value v with last_pos(v) < L using version 'rt'
+    int mex_query(int rt, int L, int l, int r) const {
+        if (seg[rt].mn >= L) return -1;             // no candidate in this interval
+        if (l == r) return l;
+        int m = (l + r) >> 1;
+        int left = mex_query(seg[rt].lc, L, l, m);
+        if (left != -1) return left;
+        return mex_query(seg[rt].rc, L, m+1, r);
+    }
+
+    // Public wrapper: mex on [L..R] using version root[R]
+    int mex_on_range(int L, int R) const {
+        // invariant: domain is [0..N]
+        int ans = mex_query(root[R], L, 0, N);
+        // There is always an answer in [0..min(N, R-L+1)], but we capped at N anyway.
+        return (ans == -1 ? N+1 : ans); // N+1 is unreachable in practice with domain [0..N]
+    }
+};
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n; 
+    if (!(cin >> n)) return 0;
+    vector<long long> a(n+1);
+    for (int i = 1; i <= n; ++i) cin >> a[i];
+
+    // Domain cap: only track values in [0..n] (others don't affect mex)
+    int V = n;
+
+    PersistentSegTree pst(V);
+    pst.root.resize(n+1);
+    pst.root[0] = pst.build(0, V);
+
+    // last_pos of values 0..V (we only need to know current last index)
+    // We don't need this array explicitly because it's stored in the tree; but we
+    // still track seen positions only to know which value to update at step i.
+    for (int i = 1; i <= n; ++i) {
+        int rt_prev = pst.root[i-1];
+        int rt = rt_prev;
+        long long ai = a[i];
+        if (0 <= ai && ai <= V) {
+            // set last_pos[ai] = i
+            rt = pst.update(rt_prev, 0, V, (int)ai, i);
+        }
+        // else ignore values outside [0..V]
+        pst.root[i] = rt;
+    }
+
+    int q; cin >> q;
+    while (q--) {
+        int L, R; cin >> L >> R;      // 1-indexed
+        int mex = pst.mex_on_range(L, R);
+        // With domain [0..n], mex is in [0..n]. If mex == -1 path, we return N+1 (won't happen).
+        cout << mex << '\n';
+    }
+    return 0;
+}
+///////LCA template
+
+// =============================== LCA (Binary Lifting) ===============================
+// Features:
+//   - add_edge(u, v)          : undirected edge
+//   - build(root)             : preprocess from a single root
+//   - build_forest()          : preprocess all components (treat as forest)
+//   - lca(u, v)               : lowest common ancestor in O(log N)
+//   - jump(u, k)              : kth ancestor of u (or -1 if none)
+//   - dist(u, v)              : distance in edges between u and v
+//   - is_ancestor(u, v)       : true if u is ancestor of v
+//
+// Notes:
+//   - 1-indexed nodes by default.
+//   - Works with up to ~2e5 nodes comfortably (adjust as needed).
+//   - If your tree is large/deep, prefer iterative DFS to avoid recursion limits,
+//     or add `#pragma`/increase stack if using recursive DFS.
+//
+// Complexity:
+//   - Build: O(N log N)
+//   - Query: O(log N)
+// ===================================================================================
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct LCA {
+    int n, LOG;
+    vector<vector<int>> g;     // adjacency (1-indexed)
+    vector<int> depth;         // depth[u]
+    vector<vector<int>> up;    // up[k][u] = 2^k-th ancestor of u (or 0)
+    vector<int> tin, tout;     // entry/exit times for ancestor checks
+    int timer = 0;
+
+    LCA(int n_=0) { init(n_); }
+
+    void init(int n_) {
+        n = n_;
+        LOG = 1;
+        while ((1 << LOG) <= max(1, n)) ++LOG;
+        g.assign(n+1, {});
+        depth.assign(n+1, 0);
+        up.assign(LOG, vector<int>(n+1, 0));
+        tin.assign(n+1, 0);
+        tout.assign(n+1, 0);
+        timer = 0;
+    }
+
+    inline void add_edge(int u, int v) {
+        g[u].push_back(v);
+        g[v].push_back(u);
+    }
+
+    // ----- DFS to fill up-table and timings -----
+    void dfs(int u, int p) {
+        tin[u] = ++timer;
+        up[0][u] = p ? p : u;  // parent of root is itself (keeps jump bounded)
+        for (int k = 1; k < LOG; ++k) {
+            up[k][u] = up[k-1][ up[k-1][u] ];
+        }
+        for (int v : g[u]) if (v != p) {
+            depth[v] = depth[u] + 1;
+            dfs(v, u);
+        }
+        tout[u] = ++timer;
+    }
+
+    // Build from a single root (tree)
+    void build(int root = 1) {
+        depth[root] = 0;
+        dfs(root, 0);
+    }
+
+    // Build over all components (forest): calls dfs on each unvisited node
+    void build_forest() {
+        for (int u = 1; u <= n; ++u) {
+            if (tin[u] == 0) {
+                depth[u] = 0;
+                dfs(u, 0);
+            }
+        }
+    }
+
+    // ----- helpers -----
+    inline bool is_ancestor(int u, int v) const {
+        // u is ancestor of v iff tin[u] <= tin[v] and tout[v] <= tout[u]
+        return tin[u] <= tin[v] && tout[v] <= tout[u];
+    }
+
+    // kth ancestor of u (k >= 0); returns -1 if beyond root
+    int jump(int u, int k) const {
+        for (int i = 0; i < LOG; ++i) {
+            if (k & (1 << i)) {
+                int nu = up[i][u];
+                if (nu == u && depth[u] == 0) return -1; // past root
+                u = nu;
+            }
+        }
+        return u;
+    }
+
+    // LCA in O(log N)
+    int lca(int u, int v) const {
+        if (is_ancestor(u, v)) return u;
+        if (is_ancestor(v, u)) return v;
+        int a = u;
+        for (int k = LOG-1; k >= 0; --k) {
+            int w = up[k][a];
+            if (!is_ancestor(w, v)) a = w;
+        }
+        return up[0][a];
+    }
+
+    // distance in edges
+    int dist(int u, int v) const {
+        int w = lca(u, v);
+        return depth[u] + depth[v] - 2 * depth[w];
+    }
+};
+
+// ------------------------------ Minimal usage example ------------------------------
+// int main() {
+//     ios::sync_with_stdio(false);
+//     cin.tie(nullptr);
+//
+//     int n, q; 
+//     cin >> n >> q;
+//     LCA lca(n);
+//     for (int i = 0; i < n-1; ++i) {
+//         int u, v; cin >> u >> v;
+//         lca.add_edge(u, v);
+//     }
+//
+//     lca.build(/*root=*/1);   // or lca.build_forest();
+//
+//     while (q--) {
+//         int u, v; cin >> u >> v;
+//         cout << lca.lca(u, v) << '\n';
+//     }
+//     return 0;
+// }
+
+
+
+//////------centroid decomposition xenia and tree---
+
+
+#include<bits/stdc++.h>
+#define int long long
+#define yes cout << "YES" << endl
+#define no cout << "NO" << endl
+#define testing cout << "testing ";
+#define mod 1000000007
+#define optimize() ios_base::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+using namespace std;
+
+int subtree[200001];
+vector<int>adj[200001];
+vector<int>vis(200001,0);
+vector<int>parent(200001,0);
+vector<int>dist(200001,1e9);
+
+
+
+//
+
+
+const int MAXN = 1e5 + 5;
+const int M = 20;
+
+vector<vector<int>> up(MAXN, vector<int>(M, 0));
+vector<int> level(MAXN, 0);
+vector<int> g[MAXN]; // Correct size initialization
+void dfs2(int node, int par, int lvl) {
+    up[node][0] = par;
+    level[node] = lvl;
+
+    for (auto child : g[node]) {
+        if (child == par) continue;
+        dfs2(child, node, lvl + 1);
+    }
+}
+
+void preprocess() {
+    for (int j = 1; j < M; j++) {
+        for (int i = 1; i < MAXN; i++) {
+            int par = up[i][j - 1];
+            up[i][j] = up[par][j - 1];
+        }
+    }
+}
+
+int lift_node(int node, int k) {
+    while (k) {
+        int ii = log2(k);
+        node = up[node][ii];
+        k -= (1LL << ii);
+    }
+    return node;
+}
+
+int lca(int a, int b) {
+    if (level[a] < level[b]) swap(a, b);
+    a = lift_node(a, level[a] - level[b]);
+    if (a == b) return a;
+
+    for (int j = M - 1; j >= 0; j--) {
+        if (up[a][j] != up[b][j]) {
+            a = up[a][j];
+            b = up[b][j];
+        }
+    }
+    return up[a][0];
+}
+
+int getdist(int a,int b) {
+
+
+        int x = lca(a, b);
+        int ans = level[a] + level[b] - 2 * level[x];
+        return ans;
+
+
+
+}
+
+
+int sz;
+void dfs(int node, int par){
+
+    subtree[node]=1;
+    sz++;
+    for(auto u:adj[node]){
+        if(u==par or vis[u]) continue;
+        dfs(u,node);
+        subtree[node]+=subtree[u];
+    }
+
+}
+
+int centroid(int node,int par,int n){
+
+    for(auto u:adj[node]){
+        if(u==par) continue;
+        if(!vis[u] and (subtree[u]*2)>n) return centroid(u,node,n);
+    }
+    return node;
+
+}
+
+void create_centroid_graph(int node,int par){
+
+     sz=0;
+    dfs(node,par);
+    int c=centroid(node,0,sz);
+    parent[c]=par;
+    vis[c]=1;
+    for(auto u:adj[c]){
+        if(vis[u]) continue;
+
+        create_centroid_graph(u,c);
+    }
+
+}
+
+
+void update(int node){
+
+    dist[node]=0;
+    int u=parent[node];
+
+    while(u>0){
+        dist[u]=min(dist[u],getdist(u,node));
+        u=parent[u];
+
+    }
+
+}
+
+int getans(int node){
+
+    int ans=dist[node];
+    int u=parent[node];
+    while(u>0){
+        ans=min(ans,dist[u]+getdist(node,u));
+        u=parent[u];
+    }
+    return ans;
+
+
+}
+
+void do_the_honour(){
+
+     int n;cin >> n;
+    int q;cin >> q;
+
+    for(int i=0;i<=n;i++) dist[i]=1e9;
+
+    for(int i=2;i<=n;i++){
+        int x,y; cin >> x >> y;
+        adj[x].push_back(y);
+        adj[y].push_back(x);
+        g[x].push_back(y);
+        g[y].push_back(x);
+
+    }
+
+
+    create_centroid_graph(1,0);
+
+    dfs2(1, 0, 0);
+    preprocess();
+
+    update(1);
+
+    while(q--){
+        int type;cin >> type;
+        int val;cin >> val;
+
+        if(type==1){
+            update(val);
+        }
+        else{
+            cout << getans(val) << endl;
+        }
+    }
+
+}
+
+int32_t main(){
+    optimize();
+    int t=1;
+    //cin>>t;
+    for(int z=1;z<=t;z++){
+
+
+    do_the_honour();
+
+
+    }
+}
+
+
+///------inversion from l to r-----
+
+// Online range inversion count using a MergeSort/Wavelet Tree.
+//
+// Definition: inversions in [l, r] = #pairs (i < j, l <= i < j <= r) with a[i] > a[j].
+//
+// Complexity: build O(n log σ), query O(log σ), where σ = #distinct values.
+// Notes:
+//  - Works with duplicates (strict > only).
+//  - l, r are 1-indexed in the public API.
+//  - We coordinate-compress values so σ ≤ n.
+//
+// How it works (high level):
+//  At each node (range of values [lo..hi]) we stably split the segment into <= mid (left)
+//  and > mid (right). We store:
+//    b[i]          : #items routed to LEFT among the first i positions (prefix map).
+//    prefCross[i]  : #“right-before-left” pairs inside the first i positions at this node.
+//  For a query [l,r], the cross inversions contributed at this node are:
+//    cross(l,r) = (prefCross[r] - prefCross[l-1]) - ( (#Left in [l,r]) * (#Right before l) )
+//  Then we descend to children with indices mapped via b[] as usual.
+
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Wavelet {
+    int lo, hi;
+    Wavelet *L = nullptr, *R = nullptr;
+    // b[i]: # to LEFT among first i (1-based positions inside this node's segment)
+    vector<int> b;
+    // prefCross[i]: #right-before-left pairs inside prefix i
+    vector<long long> prefCross;
+
+    // Build on array [from, to), with value domain [x..y]
+    Wavelet(vector<int>::iterator from, vector<int>::iterator to, int x, int y): lo(x), hi(y) {
+        if(from >= to || lo == hi) return;
+
+        int mid = (lo + hi) >> 1;
+        auto goesLeft = [mid](int x){ return x <= mid; };
+
+        int n = int(to - from);
+        b.reserve(n + 1);
+        prefCross.reserve(n + 1);
+        b.push_back(0);
+        prefCross.push_back(0);
+
+        long long rightSoFar = 0, invPref = 0;
+        for(auto it = from; it != to; ++it) {
+            int v = *it;
+            // stable partition accounting
+            b.push_back(b.back() + (goesLeft(v) ? 1 : 0));
+            if(!goesLeft(v)) {
+                // goes right
+                rightSoFar++;
+            } else {
+                // goes left: pairs created with earlier rights
+                invPref += rightSoFar;
+            }
+            prefCross.push_back(invPref);
+        }
+
+        // partition to children (stable)
+        vector<int> leftArr;  leftArr.reserve(b.back());
+        vector<int> rightArr; rightArr.reserve(n - b.back());
+        for(auto it = from; it != to; ++it) {
+            if(goesLeft(*it)) leftArr.push_back(*it);
+            else              rightArr.push_back(*it);
+        }
+        if(!leftArr.empty())
+            L = new Wavelet(leftArr.begin(), leftArr.end(), lo, mid);
+        if(!rightArr.empty())
+            R = new Wavelet(rightArr.begin(), rightArr.end(), mid+1, hi);
+    }
+
+    // Inversions in subarray [l, r] (1-based inside the ORIGINAL array)
+    // l, r refer to positions relative to this node's segment because we map indices as we go.
+    long long inversions(int l, int r) const {
+        if(l >= r || !this || lo == hi) return 0;
+
+        // left counts in prefix
+        int leftL = b[l-1];
+        int leftR = b[r];
+        int leftCnt = leftR - leftL;
+
+        int rightBeforeL = (l-1) - leftL;
+
+        long long cross = (prefCross[r] - prefCross[l-1]) - 1LL * leftCnt * rightBeforeL;
+
+        // map [l,r] to children ranges
+        int lL = leftL + 1, rL = leftR;                 // indices in left child
+        int lR = (l-1 - leftL) + 1, rR = (r - leftR);   // indices in right child
+
+        long long ans = cross;
+        if(L && lL <= rL) ans += L->inversions(lL, rL);
+        if(R && lR <= rR) ans += R->inversions(lR, rR);
+        return ans;
+    }
+};
+
+// ---------- Driver / Black-box wrapper ----------
+struct RangeInversions {
+    int n;                 // length
+    vector<int> a;         // compressed values (1..σ)
+    Wavelet* wt = nullptr; // wavelet/merge-sort tree
+
+    static vector<int> compress(const vector<long long>& arr, vector<long long>& uniqOut) {
+        uniqOut = arr;
+        sort(uniqOut.begin(), uniqOut.end());
+        uniqOut.erase(unique(uniqOut.begin(), uniqOut.end()), uniqOut.end());
+        vector<int> c(arr.size());
+        for(size_t i=0;i<arr.size();++i)
+            c[i] = int(lower_bound(uniqOut.begin(), uniqOut.end(), arr[i]) - uniqOut.begin()) + 1;
+        return c;
+    }
+
+    // Build from 1..n array (any 32/64-bit ints)
+    RangeInversions(const vector<long long>& arr) {
+        n = (int)arr.size();
+        vector<long long> uniq;
+        a = compress(arr, uniq);              // values in [1..σ]
+        int sigma = (int)uniq.size();
+        // Wavelet expects 1-based positional logic; we pass iterators as-is.
+        wt = new Wavelet(a.begin(), a.end(), 1, sigma);
+    }
+
+    // Query inversions in [l, r], 1-indexed inclusive
+    long long query(int l, int r) const {
+        if(l < 1) l = 1;
+        if(r > n) r = n;
+        if(l > r) return 0;
+        // Wavelet uses 1-based positions internally
+        return wt->inversions(l, r);
+    }
+};
+
+// ---------------- Example usage ----------------
+int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    if(!(cin >> n)) return 0;
+    vector<long long> arr(n);
+    for(int i=0;i<n;i++) cin >> arr[i];
+
+    RangeInversions DS(arr); // build once
+
+    int q; cin >> q;
+    while(q--){
+        int l, r; cin >> l >> r; // 1-indexed
+        cout << DS.query(l, r) << '\n';
+    }
+    return 0;
+}
+
+// Count of elements <= k in [l,r]
+int LTE(int l, int r, int k) const {
+    if(!this || l>r || k < lo) return 0;
+    if(hi <= k) return r - l + 1;
+    int leftL = b[l-1], leftR = b[r];
+    int lL = leftL + 1, rL = leftR;
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return (L ? L->LTE(lL, rL, k) : 0) + (R ? R->LTE(lR, rR, k) : 0);
+}
+
+
+int countInRange(int l, int r, int x, int y) const {
+    if(!this || l>r || y < lo || hi < x) return 0;
+    if(x <= lo && hi <= y) return r - l + 1;
+    int leftL = b[l-1], leftR = b[r];
+    int lL = leftL + 1, rL = leftR;
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return (L ? L->countInRange(lL, rL, x, y) : 0)
+         + (R ? R->countInRange(lR, rR, x, y) : 0);
+}
+
+int freq(int l, int r, int x) const {            // x = compressed rank
+    if(!this || l>r || x < lo || x > hi) return 0;
+    if(lo == hi) return r - l + 1;
+    int mid = (lo+hi)>>1;
+    int leftL = b[l-1], leftR = b[r];
+    if(x <= mid) return L ? L->freq(leftL+1, leftR, x) : 0;
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return R ? R->freq(lR, rR, x) : 0;
+}
+
+
+// 1-based k (k in [1..r-l+1]); returns compressed value (rank)
+int kth(int l, int r, int k) const {
+    if(lo == hi) return lo;
+    int leftL = b[l-1], leftR = b[r];
+    int cntLeft = leftR - leftL;
+    if(k <= cntLeft) return L->kth(leftL+1, leftR, k);
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return R->kth(lR, rR, k - cntLeft);
+}
+long long sumLTE(int l, int r, int k) const {
+    if(!this || l>r || k < lo) return 0;
+    if(hi <= k) return ps[r] - ps[l-1];
+    int leftL = b[l-1], leftR = b[r];
+    int lL = leftL + 1, rL = leftR;
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return (L ? L->sumLTE(lL, rL, k) : 0)
+         + (R ? R->sumLTE(lR, rR, k) : 0);
+}
+long long sumInRange(int l, int r, int x, int y) const {
+    if(!this || l>r || y < lo || hi < x) return 0;
+    if(x <= lo && hi <= y) return ps[r] - ps[l-1];
+    int leftL = b[l-1], leftR = b[r];
+    int lL = leftL + 1, rL = leftR;
+    int lR = (l-1-leftL) + 1, rR = (r-leftR);
+    return (L ? L->sumInRange(lL, rL, x, y) : 0)
+         + (R ? R->sumInRange(lR, rR, x, y) : 0);
+}
+// After building RangeInversions DS(arr) with compression mapping:
+// Suppose you kept 'uniq' externally to map rank->value:
+auto rankToVal = [&](int rank){ return uniq[rank-1]; };
+
+// Count <= k (original value 'k'):
+int k_rank = int(upper_bound(uniq.begin(), uniq.end(), k) - uniq.begin());
+int cnt = DS.wt->LTE(l, r, k_rank);
+
+// kth smallest value (original):
+int kth_rank = DS.wt->kth(l, r, k);
+long long kth_val = rankToVal(kth_rank);
+
+// Frequency of a value 'x':
+int x_rank = int(lower_bound(uniq.begin(), uniq.end(), x) - uniq.begin()) + 1;
+int f = DS.wt->freq(l, r, x_rank);
+
+// Sum of values in [x,y] (if you added ps and store original values):
+int xr = int(lower_bound(uniq.begin(), uniq.end(), x) - uniq.begin()) + 1;
+int yr = int(upper_bound(uniq.begin(), uniq.end(), y) - uniq.begin());
+long long s = DS.wt->sumInRange(l, r, xr, yr);
+
